@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router'
+import type { ReaderState } from './MushafPage'
 import { useApp } from '../app/AppContext'
 import { useI18n } from '../i18n/I18n'
 import { verseLabel } from '../i18n/labels'
@@ -82,7 +83,7 @@ export function MushafIndex() {
                 const page = quran.pageOf(s.start)
                 return (
                   <li key={s.n}>
-                    <Link to={`/mushaf/${page}`} className="surah-row">
+                    <Link to={`/mushaf/${page}`} state={{ from: s.start } satisfies ReaderState} className="surah-row">
                       <span className="surah-row__n">{num(s.n)}</span>
                       <span>
                         <span className="surah-row__name" lang="ar" translate="no">
@@ -111,7 +112,7 @@ export function MushafIndex() {
             const page = quran.pageOf(first)
             return (
               <li key={j}>
-                <Link to={`/mushaf/${page}`} className="surah-row">
+                <Link to={`/mushaf/${page}`} state={{ from: first } satisfies ReaderState} className="surah-row">
                   <span className="surah-row__n">{num(j + 1)}</span>
                   <span>
                     <span className="surah-row__name" lang="ar" translate="no">

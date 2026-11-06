@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type PointerEvent } from 'react'
-import { Link, Navigate, useNavigate, useParams } from 'react-router'
+import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router'
 import { useApp } from '../app/AppContext'
 import { useI18n } from '../i18n/I18n'
 import { PAGE_COUNT, type Surah } from '../lib/quran'
@@ -8,7 +8,7 @@ import { setKv } from '../storage/db'
 import { Ayahs } from '../components/QuranText'
 import { Dialog } from '../components/controls'
 import { PlayerBar } from '../components/PlayerBar'
-import { HeadphonesIcon } from '../components/Icons'
+import { HeadphonesIcon, PlayIcon } from '../components/Icons'
 import { usePlayer, type MyRecording } from '../hooks/usePlayer'
 import { MINE, reciterById } from '../lib/reciters'
 import { useSync } from '../app/SyncContext'
@@ -16,6 +16,14 @@ import { getRecordings } from '../storage/db'
 import { verseLabel } from '../i18n/labels'
 
 const arabicDigits = new Intl.NumberFormat('ar-EG', { useGrouping: false })
+
+/**
+ * Where the reader was asked to open, when that isn't the top of the page:
+ * a surah or juz that begins partway down it. Passed as navigation state.
+ */
+export interface ReaderState {
+  from: number
+}
 
 /** A run of consecutive ayahs from one surah on a page. */
 interface Segment {
@@ -57,7 +65,11 @@ function Reader({ page }: { page: number }) {
   const [jumpOpen, setJumpOpen] = useState(false)
   const [jumpValue, setJumpValue] = useState('')
   const swipe = useRef<{ x: number; y: number } | null>(null)
+  /** When the last swipe ended, so the tap it ends on doesn't also start playback. */
+  const swipedAt = useRef(0)
   const headingRef = useRef<HTMLHeadingElement>(null)
+  const pageRef = useRef<HTMLElement>(null)
+  const location = useLocation()
 
   // Listening.
   const [listenOpen, setListenOpen] = useState(false)
@@ -139,6 +151,20 @@ function Reader({ page }: { page: number }) {
   const segments = segmentsOf(first, last, (i) => quran.surahOf(i))
   const juz = quran.juzOf(first)
 
+  // Opened at a surah (or juz) that begins partway down the page: listening starts there.
+  const requested = (location.state as Partial<ReaderState> | null)?.from
+  const from = typeof requested === 'number' && requested >= first && requested <= last ? requested : null
+
+  /** Plays from an ayah, opening the player if it isn't open yet. */
+  const listenFrom = (i: number) => {
+    setListenOpen(true)
+    void playFrom(i)
+  }
+  const onAyahTap = (i: number) => {
+    if (Date.now() - swipedAt.current < 400) return
+    listenFrom(i)
+  }
+
   // Turn the page when playback moves past it.
   const playingIndex = player.index
   useEffect(() => {
@@ -152,6 +178,37 @@ function Reader({ page }: { page: number }) {
     headingRef.current?.focus({ preventScroll: true })
     window.scrollTo(0, 0)
   }, [page])
+
+  // Opened at a surah that begins partway down the page: bring its title into view.
+  useEffect(() => {
+    if (from === null || from === first) return
+    // After the shell's own scroll to the top of a new screen.
+    const id = requestAnimationFrame(() => {
+      const el = pageRef.current?.querySelector(`[data-index="${from}"]`)
+      ;(el?.closest('section') ?? el)?.scrollIntoView({ block: 'start' })
+    })
+    return () => cancelAnimationFrame(id)
+  }, [from, first])
+
+  // Follow the recitation down the page: when the ayah being recited is low
+  // on the screen (or out of sight), scroll it up near the top.
+  useEffect(() => {
+    if (playingIndex === null) return
+    const el = pageRef.current?.querySelector(`[data-index="${playingIndex}"]`)
+    if (!el) return
+    const target = el.closest('li') ?? el
+    const rect = target.getBoundingClientRect()
+    const top = 8
+    const bottom = Math.min(
+      window.innerHeight,
+      document.querySelector('.player')?.getBoundingClientRect().top ?? Infinity,
+    )
+    const room = bottom - top
+    const comfortable = rect.top >= top && rect.top <= top + room * 0.55 && rect.bottom <= bottom
+    if (comfortable || room <= 0) return
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    window.scrollTo({ top: window.scrollY + rect.top - (top + room * 0.15), behavior: reduce ? 'auto' : 'smooth' })
+  }, [playingIndex, page])
 
   useEffect(() => {
     if (!settings.showTranslation) return
@@ -201,7 +258,10 @@ function Reader({ page }: { page: number }) {
     if (!start) return
     const dx = e.clientX - start.x
     const dy = e.clientY - start.y
-    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) go(dx > 0 ? page + 1 : page - 1)
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      swipedAt.current = Date.now()
+      go(dx > 0 ? page + 1 : page - 1)
+    }
   }
 
   const jump = (e: FormEvent) => {
@@ -222,6 +282,15 @@ function Reader({ page }: { page: number }) {
         سورة {s.name}
       </span>
       {i18n.lang === 'en' && <span className="surah-title__en">{s.tname}</span>}
+      <button
+        type="button"
+        className="surah-title__play"
+        aria-label={t.player.playSurah(i18n.surahName(s))}
+        title={t.player.playSurah(i18n.surahName(s))}
+        onClick={() => listenFrom(s.start)}
+      >
+        <PlayIcon />
+      </button>
     </div>
   )
 
@@ -248,7 +317,13 @@ function Reader({ page }: { page: number }) {
         </label>
       </div>
 
-      <article className="page" onPointerDown={onPointerDown} onPointerUp={onPointerUp} aria-labelledby="page-h">
+      <article
+        ref={pageRef}
+        className="page"
+        onPointerDown={onPointerDown}
+        onPointerUp={onPointerUp}
+        aria-labelledby="page-h"
+      >
         <header className="page__head">
           <h1 id="page-h" ref={headingRef} tabIndex={-1}>
             {surahNames}
@@ -270,12 +345,7 @@ function Reader({ page }: { page: number }) {
                   const ayah = i - seg.surah.start + 1
                   return (
                     <li key={i} className={`tr-ayah${player.index === i ? ' tr-ayah--active' : ''}`}>
-                      <Ayahs
-                        indices={[i]}
-                        className="quran--start"
-                        active={player.index}
-                        onAyahClick={listenOpen ? (k) => void playFrom(k) : undefined}
-                      />
+                      <Ayahs indices={[i]} className="quran--start" active={player.index} onAyahClick={onAyahTap} />
                       <p className="translation" lang="en" dir="ltr">
                         <span className="translation__ref">
                           {seg.surah.n}:{ayah}
@@ -287,12 +357,7 @@ function Reader({ page }: { page: number }) {
                 })}
               </ol>
             ) : (
-              <Ayahs
-                indices={seg.indices}
-                className="quran--page"
-                active={player.index}
-                onAyahClick={listenOpen ? (k) => void playFrom(k) : undefined}
-              />
+              <Ayahs indices={seg.indices} className="quran--page" active={player.index} onAyahClick={onAyahTap} />
             )}
           </section>
         ))}
@@ -320,7 +385,7 @@ function Reader({ page }: { page: number }) {
       {listenOpen && (
         <PlayerBar
           player={player}
-          startIndex={first}
+          startIndex={from ?? first}
           onPlay={(i) => void playFrom(i)}
           hasMine={hasMine}
           downloading={downloading}

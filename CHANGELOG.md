@@ -10,6 +10,7 @@ First release.
 - Where on the page: tap the line an ayah begins on in a drawing of the open 15-line Madinah mushaf, for the 1405 AH or the 1421 AH print (chosen in Settings; page numbers throughout follow it).
 - Similar ayahs found from your own slips while reciting aloud, compared word by word and saved as pairs to practise.
 - From the meaning: recite an ayah from its English meaning.
+- Listening in the mushaf: tap any ayah, or the play button on a surah's title, to play from there; a surah opened from the list plays from its own start; the page scrolls to follow the ayah being recited.
 - Choose what you've memorized by juz, hizb, surah or ayah range.
 - Spaced repetition (FSRS) per ayah and per quarter, weakest first; missed items return within the session.
 - Progress map of all 240 quarters.

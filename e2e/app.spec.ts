@@ -36,7 +36,10 @@ test('home shows today’s revision, and where reading left off', async ({ page 
   await page.goto('/')
   await expect(page.getByRole('heading', { name: 'Revise what you’ve memorized, every day' })).toBeVisible()
   await page.getByRole('link', { name: 'Open the mushaf' }).click()
-  await page.getByRole('button', { name: 'Next page' }).click()
+  await expect(page).toHaveURL(/#\/mushaf\/1$/)
+  // Straight to page 2: the first-visit "ready offline" notice can cover the page buttons on a phone.
+  await page.goto('/#/mushaf/2')
+  await expect(page.locator('.page__foot')).toHaveText('٢')
   await page.goto('/#/memorized')
   await page.getByRole('button', { name: 'Juz 30', exact: true }).click()
   await page.getByRole('link', { name: 'Home' }).click()
