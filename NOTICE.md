@@ -42,6 +42,12 @@ and copied unchanged:
   Mohammed Marmaduke William Pickthall (1930). The translator died in 1936;
   the translation is in the public domain.
 
+## Recitations: EveryAyah.com
+
+The reciters in the mushaf reader are streamed from
+[EveryAyah.com](https://everyayah.com), one MP3 per ayah, and credited in the
+player. No audio is bundled in this repository.
+
 ## Boundary cross-check: quran.com
 
 `tests/fixtures/qurancom-boundaries.json` lists juz, rub' al-hizb and page

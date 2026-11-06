@@ -2,6 +2,16 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { Session } from '@supabase/supabase-js'
 import { appUrl, clearAuthRedirect, readAuthRedirect, supabase, syncConfigured } from '../sync/client'
 import { deleteCloudData, syncNow } from '../sync/sync'
+import {
+  deleteAllRemoteRecordings,
+  deleteRemoteRecording,
+  downloadRecording,
+  getRemoteRecordings,
+  syncRecordings,
+  uploadRecording,
+  type RemoteRecording,
+} from '../sync/recordings'
+import type { Recording } from '../storage/db'
 import { clearProgress, getKv, markAllUnsynced, setKv } from '../storage/db'
 import { useApp } from './AppContext'
 
@@ -26,6 +36,11 @@ export interface Sync {
   signOut: (keepLocal: boolean) => Promise<void>
   deleteCloud: () => Promise<void>
   deleteAccount: () => Promise<void>
+  /** Recordings kept in the account (signed in only). */
+  remoteRecordings: RemoteRecording[]
+  uploadRecording: (rec: Recording) => Promise<void>
+  downloadRecording: (remote: RemoteRecording) => Promise<Recording | null>
+  deleteRemoteRecording: (surah: number) => Promise<void>
 }
 
 const SyncContext = createContext<Sync | null>(null)
@@ -47,6 +62,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [status, setStatus] = useState<SyncStatus>({ kind: 'idle' })
   const [linkError, setLinkError] = useState<string | null>(null)
+  const [remoteRecordings, setRemoteRecordings] = useState<RemoteRecording[]>([])
   const running = useRef<Promise<void> | null>(null)
   const again = useRef(false)
   const appRef = useRef(app)
@@ -57,6 +73,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!supabase) return
     void getKv<number>('lastSync').then((at) => at && setStatus({ kind: 'synced', at }))
+    void getRemoteRecordings().then(setRemoteRecordings)
     const redirect = readAuthRedirect()
     // getSession waits for a sign-in link's ?code=… to be exchanged first.
     supabase.auth.getSession().then(({ data, error }) => {
@@ -90,6 +107,12 @@ export function SyncProvider({ children }: { children: ReactNode }) {
           const result = await syncNow(supabase, userId)
           if (result.settings) appRef.current.replaceSettings(result.settings)
           if (result.pulled > 0) await appRef.current.reloadProgress()
+          try {
+            setRemoteRecordings(await syncRecordings(supabase, userId))
+          } catch (e) {
+            console.warn('Recordings did not sync', e)
+          }
+          if (result.pulledRuns) appRef.current.touchRecitations()
         } while (again.current)
         const at = Date.now()
         await setKv('lastSync', at)
@@ -162,13 +185,31 @@ export function SyncProvider({ children }: { children: ReactNode }) {
           await appRef.current.reloadProgress()
         }
       },
+      remoteRecordings,
+      uploadRecording: async (rec) => {
+        if (!supabase || !userId) return
+        await uploadRecording(supabase, userId, rec)
+      },
+      downloadRecording: async (remote) => {
+        if (!supabase) return null
+        return downloadRecording(supabase, remote)
+      },
+      deleteRemoteRecording: async (surah) => {
+        if (!supabase || !userId) return
+        await deleteRemoteRecording(supabase, userId, surah)
+        setRemoteRecordings((list) => list.filter((r) => r.surah !== surah))
+      },
       deleteCloud: async () => {
         if (!supabase || !userId) return
+        await deleteAllRemoteRecordings(supabase, userId).catch(() => undefined)
+        setRemoteRecordings([])
         await deleteCloudData(supabase, userId)
         await setKv('sync', null)
       },
       deleteAccount: async () => {
         if (!supabase || !userId) return
+        await deleteAllRemoteRecordings(supabase, userId).catch(() => undefined)
+        setRemoteRecordings([])
         const { error } = await supabase.rpc('delete_own_account')
         if (error) throw error
         await supabase.auth.signOut({ scope: 'local' })
@@ -179,7 +220,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         setStatus({ kind: 'idle' })
       },
     }),
-    [session, status, run, userId, linkError],
+    [session, status, run, userId, linkError, remoteRecordings],
   )
 
   return <SyncContext.Provider value={value}>{children}</SyncContext.Provider>

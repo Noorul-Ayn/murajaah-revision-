@@ -1359,6 +1359,174 @@ a.surah-row {
   color: var(--ink-2);
 }
 
+/* ---------- Listening in the mushaf ---------- */
+
+.ayah-run {
+  border-radius: 0.35em;
+  transition: background-color 200ms ease;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.ayah-run--tap {
+  cursor: pointer;
+}
+
+.ayah-run--active {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.tr-ayah--active {
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+  border-radius: var(--radius);
+}
+
+.player {
+  position: sticky;
+  bottom: calc(var(--nav-h) + 0.5rem + env(safe-area-inset-bottom));
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 6px 24px color-mix(in srgb, var(--ink) 12%, transparent);
+}
+
+@media (min-width: 52rem) {
+  .player {
+    bottom: 1rem;
+  }
+}
+
+.player__top {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.player__top .select {
+  flex: 1;
+  min-height: 40px;
+}
+
+.player__now {
+  font-size: var(--step--1);
+  color: var(--ink-2);
+  text-align: center;
+}
+
+.player__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.icon-btn--main {
+  width: 56px;
+  height: 56px;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.player__options {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  font-size: var(--step--1);
+  color: var(--ink-2);
+}
+
+.player__options label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.player__options select {
+  min-height: 36px;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.player__credit {
+  font-size: 0.72rem;
+  color: var(--ink-3);
+  text-align: center;
+}
+
+/* ---------- Your recitation ---------- */
+
+.pips {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.pip {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line);
+}
+
+.pip--on {
+  background: var(--verdigris);
+  border-color: var(--verdigris);
+}
+
+.pip--rec {
+  background: var(--accent);
+  border-color: var(--accent);
+  margin-inline-start: 4px;
+}
+
+.pips--large .pip {
+  width: 16px;
+  height: 16px;
+}
+
+.dot--rec {
+  background: var(--vermilion);
+}
+
+.rec-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--vermilion);
+  font-size: var(--step--1);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.ok-text {
+  color: var(--verdigris);
+}
+
 /* ---------- Dialog and toast ---------- */
 
 .dialog {

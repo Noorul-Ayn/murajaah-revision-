@@ -46,6 +46,11 @@ export function MushafIndex() {
         </Link>
       )}
 
+      <Link to="/recite" className="continue">
+        <span className="continue__label">{t.recite.title}</span>
+        <span className="continue__where">{t.recite.open}</span>
+      </Link>
+
       <Segmented
         legend={t.mushaf.title}
         value={tab}

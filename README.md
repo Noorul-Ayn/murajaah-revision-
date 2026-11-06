@@ -34,10 +34,12 @@ Murajaah quizzes you on what you've memorized, and has the full mushaf to read p
 - **Only what you've memorized.** Choose by juz, hizb, surah or any ayah range, and questions only come from there.
 - **Weakest first.** Every ayah and quarter has its own memory strength (the [FSRS](https://github.com/open-spaced-repetition/ts-fsrs) algorithm). Missed items come back later in the same session and sooner in future ones.
 - **Honest hints.** Reveal one more word, or the surah name. Using a word hint caps that answer at *hesitated*.
-- **Recite aloud.** Turn on the microphone and recite: words appear as you say them correctly. On a wrong or skipped word you hear a short warning tone (and the phone vibrates), the right word shows in red, and the app waits until you say it. At the end it suggests a grade. This uses the browser's own speech recognition (Chrome, Edge and Safari; it needs a connection). It hears words, not tajweed, and can mishear, so treat a warning as a prompt to check.
+- **Recite aloud.** Turn on the microphone and recite: words appear as you say them correctly. On a wrong or skipped word you hear a short warning tone (and the phone vibrates), the right word shows in red, and the app waits until you say it. You can start from the beginning of the ayah or go back over it; that isn't counted as a mistake. Carry on past the verse as far as you like: every ayah you recite in full is recorded too. **Next question** grades what was heard and moves on with the microphone still on; **Stop listening** shows the answer to grade yourself. This uses the browser's own speech recognition (Chrome, Edge and Safari; it needs a connection). It hears words, not tajweed, and can mishear, so treat a warning as a prompt to check.
 - **Progress map.** All 240 quarters, juz by juz, coloured from weak to strong.
 - **The full mushaf.** Open any surah or juz and read the 604 Madani pages one by one, with surah headers and the basmala. Turn pages with the buttons, by swiping, or with the arrow keys, or jump straight to a page number. The app remembers where you stopped.
 - **English translation.** Turn it on in the reader to see each ayah followed by its meaning: Saheeh International or Pickthall, chosen in Settings.
+- **Listen to reciters.** Choose from 14 reciters, including Alafasy, Abdul Basit, Al-Husary (and his teaching recitation), Al-Minshawi, As-Sudais and Al-Muaiqly. Playback goes ayah by ayah with the basmala before each surah, highlights the ayah being recited, turns the page by itself, and can repeat each ayah up to 10 times or slow down for memorizing. Tap any ayah to play from there. Audio streams from EveryAyah.com.
+- **Your recitation.** Recite a whole surah from memory while the app follows you. After three recitations with no slips, on three different days, you can record that surah: the take is followed as you record, and only a take with no slips can be saved. Your recordings are private, kept on your device and, when you're signed in, in a private folder of your account that only you can reach. They play in the mushaf as the reciter **You**, highlighting each ayah as you go.
 - **Arabic and English**, with full right-to-left layout, light and dark themes and three Qur'an text sizes.
 - **Offline and installable.** The whole mushaf is bundled; after the first visit it works without a connection.
 - **Accounts and sync (optional).** Sign in with an emailed link (or a code, if your Supabase project sends one) to keep progress in step across devices. Without an account everything stays on the device. You can also download and restore a backup file.
@@ -93,12 +95,14 @@ src/
   storage/      IndexedDB (reviews, derived item states, settings) and backups
   sync/         Supabase client and two-way sync
   app/          React context for app state and sync
-  screens/      Practice, Quiz, Summary, Progress, Memorized, Mushaf (index and pages), Settings, Account
+  screens/      Practice, Quiz, Summary, Progress, Memorized, Mushaf (index and pages),
+                Your recitation (list and surah), Settings, Account
+  hooks/        speech recognition, the audio player, the recorder
   components/   Qur'an text rendering and shared controls
   i18n/         Arabic and English text
   data/         quran-hafs.json and translations/ (generated; do not edit)
 data/tanzil/    verbatim Tanzil source files (text, metadata, translations)
-supabase/       database migration
+supabase/       database migrations (accounts and sync; runs and private recordings)
 scripts/        data download, build and cross-check
 tests/ e2e/     Vitest and Playwright tests
 ```

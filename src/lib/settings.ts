@@ -2,6 +2,7 @@ import { MODES, type Mode } from './items'
 import { ORDERS, type Order } from './session'
 import { isScopePart, type Scope } from './scope'
 import { TRANSLATIONS, type TranslationId } from './translations'
+import { MINE, PLAY_REPEATS, PLAY_SPEEDS, RECITERS } from './reciters'
 
 export type Lang = 'ar' | 'en'
 export type Theme = 'system' | 'light' | 'dark'
@@ -28,6 +29,11 @@ export interface Settings {
   listenSound: boolean
   /** Reciting aloud: vibrate on a slip (phones). */
   listenVibrate: boolean
+  /** Reciter for listening in the mushaf ('mine' for the user's own recordings). */
+  reciter: string
+  /** Times each ayah is played. */
+  playRepeat: number
+  playSpeed: number
   /** ms since epoch; the newer copy wins when syncing. */
   updatedAt: number
 }
@@ -51,6 +57,9 @@ export function defaultSettings(browserLang = 'en'): Settings {
     showTranslation: false,
     listenSound: true,
     listenVibrate: true,
+    reciter: 'alafasy',
+    playRepeat: 1,
+    playSpeed: 1,
     updatedAt: 0,
   }
 }
@@ -82,6 +91,13 @@ export function sanitizeSettings(value: unknown, base: Settings = defaultSetting
     showTranslation: typeof v.showTranslation === 'boolean' ? v.showTranslation : base.showTranslation,
     listenSound: typeof v.listenSound === 'boolean' ? v.listenSound : base.listenSound,
     listenVibrate: typeof v.listenVibrate === 'boolean' ? v.listenVibrate : base.listenVibrate,
+    reciter: oneOf(v.reciter, [...RECITERS.map((r) => r.id), MINE], base.reciter),
+    playRepeat: (PLAY_REPEATS as readonly number[]).includes(v.playRepeat as number)
+      ? (v.playRepeat as number)
+      : base.playRepeat,
+    playSpeed: (PLAY_SPEEDS as readonly number[]).includes(v.playSpeed as number)
+      ? (v.playSpeed as number)
+      : base.playSpeed,
     updatedAt: clampInt(v.updatedAt, 0, Number.MAX_SAFE_INTEGER, base.updatedAt),
   }
 }

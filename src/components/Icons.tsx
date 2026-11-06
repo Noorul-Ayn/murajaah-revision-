@@ -59,6 +59,52 @@ export function MicIcon() {
   )
 }
 
+export function PlayIcon() {
+  return (
+    <svg {...base} width="22" height="22" fill="currentColor">
+      <path d="M8 5.5v13l10.5-6.5z" />
+    </svg>
+  )
+}
+
+export function PauseIcon() {
+  return (
+    <svg {...base} width="22" height="22" fill="currentColor">
+      <rect x="6.5" y="5.5" width="3.5" height="13" rx="1" />
+      <rect x="14" y="5.5" width="3.5" height="13" rx="1" />
+    </svg>
+  )
+}
+
+/** Points left: in a right-to-left mushaf, the next ayah is to the left. */
+export function NextIcon() {
+  return (
+    <svg {...base} width="22" height="22">
+      <path d="M17 6.5v11L9.5 12z" fill="currentColor" />
+      <path d="M6.5 6.5v11" strokeWidth="2.2" />
+    </svg>
+  )
+}
+
+export function PrevIcon() {
+  return (
+    <svg {...base} width="22" height="22">
+      <path d="M7 6.5v11l7.5-5.5z" fill="currentColor" />
+      <path d="M17.5 6.5v11" strokeWidth="2.2" />
+    </svg>
+  )
+}
+
+export function HeadphonesIcon() {
+  return (
+    <svg {...base} width="20" height="20">
+      <path d="M4 15v-3a8 8 0 0 1 16 0v3" />
+      <rect x="3.5" y="14" width="4" height="6" rx="1.5" />
+      <rect x="16.5" y="14" width="4" height="6" rx="1.5" />
+    </svg>
+  )
+}
+
 export function CloseIcon() {
   return (
     <svg {...base} width="22" height="22">

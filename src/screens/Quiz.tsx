@@ -3,10 +3,10 @@ import { Navigate, useLocation, useNavigate } from 'react-router'
 import { useApp } from '../app/AppContext'
 import { useI18n } from '../i18n/I18n'
 import { verseLabel } from '../i18n/labels'
-import { itemsInScope, type ItemId, type Mode } from '../lib/items'
+import { ayahItem, itemsInScope, MIN_AYAH_WORDS, type ItemId, type Mode } from '../lib/items'
 import { scopeMask, type Scope } from '../lib/scope'
 import { buildQuestion, pickItems, seededRng, type Order, type Question } from '../lib/session'
-import { leadingWords, splitWords } from '../lib/text'
+import { leadingWords, splitWords, wordCount } from '../lib/text'
 import { QUARTER_COUNT } from '../lib/quran'
 import type { Grade3 } from '../lib/srs'
 import { Ayahs, PromptWords } from '../components/QuranText'
@@ -27,6 +27,8 @@ export type QuizRequest = { mode: Mode; scope: Scope; size: number; order: Order
 const REQUEUE_GAP = 4
 /** Words shown when naming a rub'. */
 const NAME_PROMPT_WORDS = 6
+/** How far past the question's verse the app keeps following a recitation. */
+const CONTINUE_AYAHS = 30
 
 function isRequest(v: unknown): v is QuizRequest {
   return typeof v === 'object' && v !== null && 'mode' in v && ('scope' in v || 'itemIds' in v)
@@ -77,7 +79,14 @@ function QuizSession({ request }: { request: QuizRequest }) {
 
   // Reciting aloud.
   const speech = useSpeech()
-  const [recite, setRecite] = useState<{ expected: Expected[]; prompt: number } | null>(null)
+  /**
+   * The recitation being followed: the question's own words (`targetCount`
+   * expected positions), then the ayahs after it, so the reciter can keep
+   * going past the verse until they move on.
+   */
+  const [recite, setRecite] = useState<{ expected: Expected[]; prompt: number; targetCount: number } | null>(null)
+  /** Keep the microphone on from one question to the next. */
+  const [voice, setVoice] = useState(false)
   const [noticeOpen, setNoticeOpen] = useState(false)
   const warned = useRef(new Set<number>())
 
@@ -103,16 +112,19 @@ function QuizSession({ request }: { request: QuizRequest }) {
   const finished = !question
   useFocusMode(!finished)
 
-  const grade = useCallback(
-    async (g: Grade3) => {
+  /** Records the answer (and any ayahs recited after it) and moves on. */
+  const advance = useCallback(
+    async (g: Grade3, keepVoice: boolean, extra: readonly { itemId: ItemId; grade: Grade3 }[]) => {
       if (!question || busy) return
       setBusy(true)
       try {
         await recordAnswer(question.itemId, g, question.mode)
+        for (const c of extra) await recordAnswer(c.itemId, c.grade, 'ayah')
       } finally {
         setBusy(false)
       }
-      setResults((r) => [...r, { itemId: question.itemId, grade: g }])
+      setResults((r) => [...r, { itemId: question.itemId, grade: g }, ...extra])
+      if (!keepVoice) setVoice(false)
       if (g === 'missed' && !requeued.has(question.itemId)) {
         requeued.add(question.itemId)
         setQueue((q) => {
@@ -152,7 +164,36 @@ function QuizSession({ request }: { request: QuizRequest }) {
     [recite, heard, speech.interimText],
   )
 
-  // Warn once per slip, and reveal the answer when the recitation is complete.
+  // How the question's own words went, and which later ayahs were recited in full.
+  const recited = useMemo(() => {
+    if (!recite || !followed) return null
+    const { expected, targetCount } = recite
+    let targetSlips = 0
+    for (const p of followed.slips.keys()) if (p < targetCount) targetSlips++
+    const ayahs: { index: number; slips: number }[] = []
+    for (let p = targetCount; p < followed.next; p++) {
+      const e = expected[p]!
+      const last = ayahs[ayahs.length - 1]
+      if (!last || last.index !== e.ayah) ayahs.push({ index: e.ayah, slips: 0 })
+      if (followed.slips.has(p)) ayahs[ayahs.length - 1]!.slips++
+    }
+    // Only ayahs said to the end count.
+    const lastPos = expected.findLastIndex((e) => e.ayah === ayahs[ayahs.length - 1]?.index)
+    if (ayahs.length && lastPos >= followed.next) ayahs.pop()
+    return { targetDone: followed.next >= targetCount, targetSlips, ayahs }
+  }, [recite, followed])
+
+  /** Ayahs recited in full after the question's own words, graded from their slips. */
+  const continuation = useMemo(
+    () =>
+      (recited?.ayahs ?? [])
+        .filter((a) => wordCount(quran.text(a.index)) >= MIN_AYAH_WORDS)
+        .map((a) => ({ itemId: ayahItem(quran, a.index), grade: suggestGrade(a.slips) })),
+    [recited, quran],
+  )
+  const grade = useCallback((g: Grade3) => advance(g, false, continuation), [advance, continuation])
+
+  // Warn once per slip; stop at the end of what can be followed.
   const { listening, stop: stopListening } = speech
   useEffect(() => {
     if (!followed || !listening) return
@@ -167,12 +208,12 @@ function QuizSession({ request }: { request: QuizRequest }) {
     if (followed.done) stopListening()
   }, [followed, listening, stopListening, settings.listenSound, settings.listenVibrate])
 
-  // A recitation followed to the end reveals the answer by itself.
+  // A recitation followed to the very end reveals the answer by itself.
   const revealed = revealedByUser || followed?.done === true
 
   const canListen = question !== null && question.mode !== 'name' && speechSupported()
 
-  const startListening = async () => {
+  const startListening = useCallback(async () => {
     if (!question || question.mode === 'name') return
     primeAudio()
     if (!(await getKv<boolean>('speechNotice'))) {
@@ -180,27 +221,48 @@ function QuizSession({ request }: { request: QuizRequest }) {
       return
     }
     warned.current.clear()
+    setVoice(true)
     speech.start()
     const simple = await loadSimpleText()
     const prompt = question.mode === 'ayah' ? ayahPrompt!.shown : 0
+    const target = question.reveal
+    const lastTarget = target[target.length - 1]!
+    const surahEnd = quran.surahRange(quran.surahOf(lastTarget).n)[1]
+    const following = Array.from(
+      { length: Math.min(CONTINUE_AYAHS, surahEnd - lastTarget) },
+      (_, k) => lastTarget + 1 + k,
+    )
+    const text = (i: number) => quran.text(i)
+    const plain = (i: number) => simple[i]!
     setRecite({
-      expected: buildExpected(
-        question.reveal,
-        (i) => quran.text(i),
-        (i) => simple[i]!,
-        prompt,
-      ),
+      expected: buildExpected([...target, ...following], text, plain, prompt),
       prompt,
+      targetCount: buildExpected(target, text, plain, prompt).length,
     })
-  }
+  }, [question, speech, ayahPrompt, quran])
+
+  // In voice mode, start listening by itself when the next question comes up.
+  const autoStarted = useRef(-1)
+  useEffect(() => {
+    if (!voice || !question || question.mode === 'name' || autoStarted.current === pos) return
+    if (recite || listening) return
+    const id = window.setTimeout(() => {
+      autoStarted.current = pos
+      void startListening()
+    }, 0)
+    return () => window.clearTimeout(id)
+  }, [voice, question, pos, recite, listening, startListening])
 
   const revealNow = () => {
     speech.stop()
     setRevealed(true)
   }
 
-  let suggested: Grade3 | null = followed?.done ? suggestGrade(followed.slips.size) : null
+  let suggested: Grade3 | null = recited?.targetDone ? suggestGrade(recited.targetSlips) : null
   if (suggested === 'perfect' && usedWordHint) suggested = 'hesitated'
+
+  /** Next question in voice mode: grades are taken from what was heard. */
+  const nextQuestion = () => void advance(suggested ?? 'missed', true, continuation)
 
   const chooseQuarter = async (c: number | 'unknown') => {
     if (question?.mode !== 'name' || choice !== null) return
@@ -242,7 +304,10 @@ function QuizSession({ request }: { request: QuizRequest }) {
         }
         return
       }
-      if (!revealed && (e.key === ' ' || e.key === 'Enter')) {
+      if (listening && e.key === 'Enter') {
+        e.preventDefault()
+        nextQuestion()
+      } else if (!revealed && (e.key === ' ' || e.key === 'Enter')) {
         e.preventDefault()
         revealNow()
       } else if (!revealed && question.mode === 'ayah' && e.key.toLowerCase() === 'h') {
@@ -271,6 +336,27 @@ function QuizSession({ request }: { request: QuizRequest }) {
     </div>
   )
 
+  /**
+   * Which ayahs the recitation board shows: the question's own while it is
+   * being recited, then the ayah being recited (with the one before it), and
+   * after the answer is revealed, everything that was recited.
+   */
+  const boardView = (target: readonly number[]): { indices: number[]; promptWords: number } => {
+    const prompt = recite?.prompt ?? 0
+    if (!recite || !followed) return { indices: [...target], promptWords: prompt }
+    const first = target[0]!
+    const lastTarget = target[target.length - 1]!
+    const pos = Math.min(followed.next, recite.expected.length - 1)
+    const current = recite.expected[pos]!.ayah
+    const beyond = followed.next > recite.targetCount && current > lastTarget
+    if (revealed) {
+      const upto = beyond ? current : lastTarget
+      return { indices: Array.from({ length: upto - first + 1 }, (_, k) => first + k), promptWords: prompt }
+    }
+    if (!beyond) return { indices: [...target], promptWords: prompt }
+    return { indices: [current - 1, current], promptWords: current - 1 === first ? prompt : 0 }
+  }
+
   let ask = ''
   let board: ReactNode = null
   let hints: ReactNode = null
@@ -288,10 +374,9 @@ function QuizSession({ request }: { request: QuizRequest }) {
           {recite && followed ? (
             <>
               <RecitationBoard
-                indices={question.reveal}
+                {...boardView(question.reveal)}
                 expected={recite.expected}
                 result={followed}
-                promptWords={recite.prompt}
                 complete={revealed}
               />
               {revealed && where(question.index)}
@@ -336,10 +421,9 @@ function QuizSession({ request }: { request: QuizRequest }) {
           {recite && followed ? (
             <>
               <RecitationBoard
-                indices={question.reveal}
+                {...boardView(question.reveal)}
                 expected={recite.expected}
                 result={followed}
-                promptWords={0}
                 complete={revealed}
                 basmala
               />
@@ -373,10 +457,9 @@ function QuizSession({ request }: { request: QuizRequest }) {
           {recite && followed ? (
             <>
               <RecitationBoard
-                indices={question.reveal}
+                {...boardView(question.reveal)}
                 expected={recite.expected}
                 result={followed}
-                promptWords={0}
                 complete={revealed}
                 basmala
               />
@@ -505,11 +588,12 @@ function QuizSession({ request }: { request: QuizRequest }) {
           )
         ) : revealed ? (
           <>
-            {followed?.done && (
+            {recited?.targetDone && (
               <p className="note" role="status">
-                {followed.slips.size === 0
+                {recited.targetSlips === 0
                   ? t.listen.done
-                  : t.listen.doneWithSlips(t.listen.mistakes(followed.slips.size, num(followed.slips.size)))}
+                  : t.listen.doneWithSlips(t.listen.mistakes(recited.targetSlips, num(recited.targetSlips)))}
+                {continuation.length > 0 && <> {t.listen.alsoRecited(continuation.length, num(continuation.length))}</>}
               </p>
             )}
             {usedWordHint && <p className="note">{t.quiz.hintCap}</p>}
@@ -547,31 +631,52 @@ function QuizSession({ request }: { request: QuizRequest }) {
                         ? t.listen.failed
                         : followed?.stuck
                           ? t.listen.slipped
-                          : t.listen.listening}
+                          : recited?.targetDone
+                            ? t.listen.keepGoing
+                            : t.listen.listening}
               </p>
             )}
-            <div className={canListen ? 'listen-row' : undefined}>
-              {canListen &&
-                (speech.listening ? (
-                  <button type="button" className="btn btn--large" onClick={() => speech.stop()}>
-                    <span className="dot dot--live" aria-hidden="true" />
-                    {t.listen.stop}
-                  </button>
-                ) : (
+            {speech.listening ? (
+              <div className="listen-row">
+                <button
+                  type="button"
+                  className="btn btn--large"
+                  onClick={() => {
+                    setVoice(false)
+                    revealNow()
+                  }}
+                >
+                  <span className="dot dot--live" aria-hidden="true" />
+                  {t.listen.stop}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--primary btn--large btn--block"
+                  disabled={busy}
+                  onClick={nextQuestion}
+                  aria-keyshortcuts="Enter"
+                >
+                  {t.listen.next}
+                </button>
+              </div>
+            ) : (
+              <div className={canListen ? 'listen-row' : undefined}>
+                {canListen && (
                   <button type="button" className="btn btn--large" onClick={() => void startListening()}>
                     <MicIcon />
                     {t.listen.start}
                   </button>
-                ))}
-              <button
-                type="button"
-                className="btn btn--primary btn--large btn--block"
-                onClick={revealNow}
-                aria-keyshortcuts="Space"
-              >
-                {t.quiz.reveal}
-              </button>
-            </div>
+                )}
+                <button
+                  type="button"
+                  className="btn btn--primary btn--large btn--block"
+                  onClick={revealNow}
+                  aria-keyshortcuts="Space"
+                >
+                  {t.quiz.reveal}
+                </button>
+              </div>
+            )}
             {!speech.listening && <p className="note keys-hint">{t.quiz.keys}</p>}
           </>
         )}

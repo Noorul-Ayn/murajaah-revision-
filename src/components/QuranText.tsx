@@ -19,10 +19,22 @@ interface AyahsProps {
   /** Show the basmala before ayah 1 of a surah. */
   basmala?: boolean
   className?: string
+  /** The ayah being played, highlighted. */
+  active?: number | null
+  /** Makes each ayah tappable. */
+  onAyahClick?: (index: number) => void
 }
 
 /** One or more ayahs, word by word, with ayah-end markers. */
-export function Ayahs({ indices, alreadyShown = 0, animate = false, basmala = false, className }: AyahsProps) {
+export function Ayahs({
+  indices,
+  alreadyShown = 0,
+  animate = false,
+  basmala = false,
+  className,
+  active,
+  onAyahClick,
+}: AyahsProps) {
   const { quran } = useApp()
   const split = indices.map((index) => splitWords(quran.text(index)))
   // Stagger the reveal across ayahs: the n-th newly shown word waits n steps.
@@ -38,20 +50,26 @@ export function Ayahs({ indices, alreadyShown = 0, animate = false, basmala = fa
         return (
           <Fragment key={index}>
             {basmala && ayah === 1 && surah.basmala && <span className="basmala">{surah.basmala}</span>}
-            {rubSign && <span className="ayah-end">{RUB_SIGN} </span>}
-            {words.map((w, i) => {
-              const fresh = animate && (k > 0 || i >= alreadyShown)
-              const step = offsets[k]! + i - (k === 0 ? alreadyShown : 0)
-              const style = fresh ? ({ '--i': step } as CSSProperties) : undefined
-              return (
-                <Fragment key={i}>
-                  <span className={fresh ? 'word word--revealed' : 'word'} style={style}>
-                    {w}
-                  </span>{' '}
-                </Fragment>
-              )
-            })}
-            <AyahEnd n={ayah} />{' '}
+            <span
+              className={`ayah-run${active === index ? ' ayah-run--active' : ''}${onAyahClick ? ' ayah-run--tap' : ''}`}
+              data-index={index}
+              onClick={onAyahClick ? () => onAyahClick(index) : undefined}
+            >
+              {rubSign && <span className="ayah-end">{RUB_SIGN} </span>}
+              {words.map((w, i) => {
+                const fresh = animate && (k > 0 || i >= alreadyShown)
+                const step = offsets[k]! + i - (k === 0 ? alreadyShown : 0)
+                const style = fresh ? ({ '--i': step } as CSSProperties) : undefined
+                return (
+                  <Fragment key={i}>
+                    <span className={fresh ? 'word word--revealed' : 'word'} style={style}>
+                      {w}
+                    </span>{' '}
+                  </Fragment>
+                )
+              })}
+              <AyahEnd n={ayah} />
+            </span>{' '}
           </Fragment>
         )
       })}

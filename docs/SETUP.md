@@ -25,6 +25,10 @@ You don't need Supabase's **GitHub integration** for this app. If you turned it 
 
 This creates two tables, `reviews` and `user_settings`, and locks both with row-level security so each account can only read and change its own rows. It also adds a function that lets a signed-in user delete their own account. Running the script again is harmless.
 
+4. Open a new query and do the same with [`supabase/migrations/20261106020000_recitations.sql`](../supabase/migrations/20261106020000_recitations.sql). It adds the table for whole-surah recitations (so the three clean days count across your devices) and a **private** storage bucket, `recitations`, for your own recordings. Each account can only reach files in its own folder; nothing in the bucket is public.
+
+   The free plan includes 1 GB of storage. Recordings are compressed: about 15 MB per hour of recitation.
+
 ### 1.3 Tell Supabase where the app lives
 
 Sign-in emails contain a link that brings you back to the app, and Supabase only sends people back to addresses you allow.
@@ -116,6 +120,7 @@ On a phone, open that address and choose **Add to Home Screen** (Safari) or **In
 | "Email address not authorized" | The built-in sender only emails your Supabase organization's members. Set up custom SMTP (1.7). |
 | "Email rate limit exceeded" | The built-in sender allows 2 emails an hour. Wait, or set up custom SMTP (1.7). |
 | syntax error at or near "supabase" in the SQL Editor | The file's name was pasted instead of its contents (1.2). |
+| Recordings stay "on this device" and never reach the account | The recitations SQL (1.2, step 4) hasn't been run on this project. |
 | Sync failed: "relation public.reviews does not exist" | The SQL in 1.2 hasn't been run on this project. |
 | The deploy job fails at "Configure Pages" | Pages isn't enabled with **GitHub Actions** as the source (step 2.2). |
 | The app shows an old version | Reload once. The app also shows a "New version is ready" message with a Reload button. |

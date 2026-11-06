@@ -42,7 +42,7 @@ function ctor(): RecognitionCtor | null {
 
 export const speechSupported = (): boolean => ctor() !== null
 
-export type SpeechError = 'denied' | 'network' | 'no-speech' | 'other'
+export type SpeechError = 'denied' | 'network' | 'no-speech' | 'busy' | 'other'
 
 export interface Speech {
   listening: boolean
@@ -101,7 +101,9 @@ export function useSpeech(lang = 'ar-SA'): Speech {
             ? 'denied'
             : e.error === 'network'
               ? 'network'
-              : 'other',
+              : e.error === 'audio-capture'
+                ? 'busy'
+                : 'other',
         )
       }
       r.onend = () => {

@@ -77,8 +77,30 @@ describe('following a recitation', () => {
   const ikhlas1 = expectedFor([at(112, 1)], 2) // after "قل هو": الله أحد
   const fatiha = expectedFor([0, 1, 2, 3, 4, 5, 6])
 
-  it('starts after the words already shown', () => {
-    expect(ikhlas1.map((e) => e.norm)).toEqual(['الله', 'احد'])
+  it('counts the words already shown as said', () => {
+    expect(ikhlas1.filter((e) => e.given).map((e) => e.norm)).toEqual(['قل', 'هو'])
+    expect(ikhlas1.filter((e) => !e.given).map((e) => e.norm)).toEqual(['الله', 'احد'])
+    expect(follow(ikhlas1, []).next).toBe(2)
+  })
+
+  it('lets the reciter start from the beginning of the ayah', () => {
+    expect(follow(ikhlas1, words('قل'), true).slips.size).toBe(0)
+    expect(follow(ikhlas1, words('قل')).slips.size).toBe(0)
+    const f = follow(ikhlas1, words('قل هو الله أحد'))
+    expect(f).toMatchObject({ done: true, stuck: false })
+    expect(f.slips.size).toBe(0)
+    const fatiha1 = expectedFor([0], 2) // "بسم الله" shown
+    expect(follow(fatiha1, words('بسم الله الرحمن الرحيم')).slips.size).toBe(0)
+  })
+
+  it('lets the reciter go back over a stretch of the ayah', () => {
+    const e = expectedFor([at(2, 2)], 2) // "ذلك الكتاب" shown
+    const f = follow(e, words('لا ريب فيه ريب فيه هدى للمتقين'))
+    expect(f.done).toBe(true)
+    expect(f.slips.size).toBe(0)
+    const again = follow(e, words('لا ريب فيه ذلك الكتاب لا ريب فيه هدى للمتقين'))
+    expect(again.done).toBe(true)
+    expect(again.slips.size).toBe(0)
   })
 
   it('finishes a correct recitation with no slips', () => {
@@ -89,13 +111,14 @@ describe('following a recitation', () => {
 
   it('waits on a wrong word until it is corrected', () => {
     const e = expectedFor([at(112, 3)], 2) // after "لم يلد": ولم يولد
+    // Positions 0–1 are the shown "لم يلد"; 2 is ولم, 3 is يولد.
     const wrong = follow(e, words('ولم يلد'))
     expect(wrong.stuck).toBe(true)
-    expect(wrong.next).toBe(1)
-    expect(wrong.slips.get(1)).toBe('wrong')
+    expect(wrong.next).toBe(3)
+    expect(wrong.slips.get(3)).toBe('wrong') // يلد is an earlier word, but saying it here is a slip
     const fixed = follow(e, words('ولم يلد يولد'))
     expect(fixed.done).toBe(true)
-    expect(fixed.slips.get(1)).toBe('wrong') // the slip still counts
+    expect(fixed.slips.get(3)).toBe('wrong') // the slip still counts
   })
 
   it('notices skipped words and picks up after them', () => {
@@ -125,7 +148,7 @@ describe('following a recitation', () => {
     const e = expectedFor([at(2, 2)], 2) // لا ريب فيه هدى للمتقين
     const f = follow(e, words('لا ريب فيه من رب العالمين'))
     expect(f.stuck).toBe(true)
-    expect(f.slips.get(3)).toBe('wrong')
+    expect(f.slips.get(5)).toBe('wrong') // هدى, after the two shown words and لا ريب فيه
   })
 
   it('suggests a grade from the number of slips', () => {

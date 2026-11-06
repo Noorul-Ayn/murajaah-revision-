@@ -122,6 +122,11 @@ export interface Expected {
   ayah: number
   /** Index of the Uthmani display word (splitWords) within that ayah. */
   word: number
+  /**
+   * Already on screen as the prompt. Counted as said, so the reciter may
+   * skip it or say it again; it is never a mistake either way.
+   */
+  given?: boolean
 }
 
 /** Isti'adha and basmala may be said before starting; they aren't checked. */
@@ -129,7 +134,8 @@ const OPENERS = ['اعوذ بالله من الشيطان الرجيم', 'بسم
 
 /**
  * The words to recite: from `startWord` (an Uthmani word index) in the first
- * ayah, through the end of the last one.
+ * ayah, through the end of the last one. Words before `startWord` are
+ * included as `given`, so reciting from the start of the ayah is understood.
  */
 export function buildExpected(
   indices: readonly number[],
@@ -143,9 +149,10 @@ export function buildExpected(
     const sw = simpleText(ayah).split(/\s+/).filter(Boolean)
     const map = alignWords(uw, sw)
     sw.forEach((w, j) => {
-      if (k === 0 && map[j]! < startWord) return
       const norm = normalize(w)
-      if (norm) out.push({ norm, ayah, word: map[j]! })
+      if (!norm) return
+      if (k === 0 && map[j]! < startWord) out.push({ norm, ayah, word: map[j]!, given: true })
+      else out.push({ norm, ayah, word: map[j]! })
     })
   })
   return out
@@ -171,20 +178,34 @@ export interface Follow {
  *
  * A wrong word doesn't move forward: the expected word stays awaited until it
  * is said, like a teacher waiting for the correction.
+ *
+ * Going back is not a mistake: starting the ayah again from its first word,
+ * or repeating a stretch of it in order, is followed silently until the
+ * reciter reaches the awaited word again.
  */
 export function follow(expected: readonly Expected[], heard: readonly string[], lastIsTentative = false): Follow {
   const n = expected.length
   const slips = new Map<number, Slip>()
   let p = 0
+  while (p < n && expected[p]!.given) p++
   let i = 0
   let stuck = false
+  /** Position within the current ayah's said words while going back over them; -1 when not. */
+  let back = -1
 
   const E = (k: number) => expected[k]?.norm ?? ''
+  /** The words of the current ayah already said (or shown), in order. */
+  const saidInAyah = (k: number): string[] => {
+    const ayah = expected[k]?.ayah ?? expected[k - 1]?.ayah
+    let s = k
+    while (s > 0 && expected[s - 1]!.ayah === ayah) s--
+    return expected.slice(s, k).map((e) => e.norm)
+  }
 
   // Skip an isti'adha or basmala said before the first expected word, including
   // one still being said (so its first words aren't flagged as mistakes).
   for (const opener of OPENERS) {
-    if (E(0) === opener[0] && E(1) === opener[1]) continue // it's part of the text itself
+    if (sameWord(E(0), opener[0]!) && sameWord(E(1), opener[1]!)) continue // it's part of the text itself
     let k = 0
     while (k < opener.length && i + k < heard.length && sameWord(heard[i + k]!, opener[k]!)) k++
     if (k >= 2 || (k >= 1 && i + k === heard.length)) i += k
@@ -197,8 +218,35 @@ export function follow(expected: readonly Expected[], heard: readonly string[], 
       p++
       i++
       stuck = false
+      back = -1
       continue
     }
+    // Going back over the ayah: from its first word, or a stretch of it in
+    // order (confirmed by the word after it).
+    const said = saidInAyah(p)
+    if (said.length) {
+      if (back >= 0 && back + 1 < said.length && sameWord(w, said[back + 1]!)) {
+        back++
+        i++
+        continue
+      }
+      if (sameWord(w, said[0]!)) {
+        back = 0
+        i++
+        continue
+      }
+      const next = heard[i + 1]
+      const k = said.findIndex((x) => sameWord(w, x))
+      if (k > 0 && next !== undefined) {
+        const follows = k + 1 < said.length ? sameWord(next, said[k + 1]!) : sameWord(next, E(p))
+        if (follows) {
+          back = k
+          i++
+          continue
+        }
+      }
+    }
+    back = -1
     // The recognizer joined two words into one.
     if (p + 1 < n && sameWord(w, E(p) + E(p + 1))) {
       p += 2

@@ -18,6 +18,9 @@ export interface App {
   reloadProgress: () => Promise<void>
   /** Increments on every local change; the sync layer watches it. */
   changes: number
+  /** Increments when runs or recordings change (locally or from sync). */
+  recitations: number
+  touchRecitations: (local?: boolean) => void
 }
 
 const AppContext = createContext<App | null>(null)
@@ -53,6 +56,11 @@ export function AppProvider({
   const [settings, setSettings] = useState<Settings | null>(null)
   const [states, setStates] = useState<Map<ItemId, ItemState>>(new Map())
   const [changes, setChanges] = useState(0)
+  const [recitations, setRecitations] = useState(0)
+  const touchRecitations = useCallback((local = false) => {
+    setRecitations((n) => n + 1)
+    if (local) setChanges((c) => c + 1)
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -125,9 +133,22 @@ export function AppProvider({
             recordAnswer,
             reloadProgress,
             changes,
+            recitations,
+            touchRecitations,
           }
         : null,
-    [boot, settings, states, updateSettings, replaceSettings, recordAnswer, reloadProgress, changes],
+    [
+      boot,
+      settings,
+      states,
+      updateSettings,
+      replaceSettings,
+      recordAnswer,
+      reloadProgress,
+      changes,
+      recitations,
+      touchRecitations,
+    ],
   )
 
   const lang = settings?.lang ?? (navigator.language.startsWith('ar') ? 'ar' : 'en')

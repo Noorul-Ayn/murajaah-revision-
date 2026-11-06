@@ -84,9 +84,10 @@ describe('local storage', () => {
  * `user` plays the part of row-level security: queries only see that user's rows.
  */
 function fakeSupabase() {
-  const tables: { reviews: Record<string, unknown>[]; user_settings: Record<string, unknown>[] } = {
+  const tables: Record<'reviews' | 'user_settings' | 'surah_runs', Record<string, unknown>[]> = {
     reviews: [],
     user_settings: [],
+    surah_runs: [],
   }
   let clock = Date.UTC(2026, 0, 1)
   const client = {

@@ -10,7 +10,9 @@ First release.
 - Progress map of all 240 quarters.
 - The full mushaf: surah and juz index, the 604 Madani pages read one by one (buttons, swipe, arrow keys, go to page), with the last page remembered.
 - Optional English translation in the reader, ayah by ayah: Saheeh International or Pickthall.
-- Recite aloud: the app follows your recitation word by word, plays a warning tone and vibrates on a wrong or skipped word, shows the right word, and suggests a grade.
+- Recite aloud: the app follows your recitation word by word, plays a warning tone and vibrates on a wrong or skipped word, shows the right word, and suggests a grade. Starting from the beginning of the ayah or going back over it isn't a mistake; you can keep reciting past the verse and every ayah recited in full is recorded; Next question keeps the microphone on.
+- Listen to 14 reciters in the mushaf, ayah by ayah, with highlighting, automatic page turns, repeat and speed.
+- Your recitation: recite whole surahs from memory; three clean recitations on different days unlock recording a surah; only a take with no slips can be saved; recordings are private (device and a private storage folder in your account) and play as the reciter "You".
 - Arabic and English interface with right-to-left layout; light and dark themes in a soft amethyst palette.
 - Works offline and installs as an app.
 - Optional accounts with email sign-in (link or code) and conflict-free sync across devices (Supabase).

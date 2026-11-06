@@ -7,6 +7,13 @@ import { loadTranslation, TRANSLATIONS, type Translation } from '../lib/translat
 import { setKv } from '../storage/db'
 import { Ayahs } from '../components/QuranText'
 import { Dialog } from '../components/controls'
+import { PlayerBar } from '../components/PlayerBar'
+import { HeadphonesIcon } from '../components/Icons'
+import { usePlayer, type MyRecording } from '../hooks/usePlayer'
+import { MINE, reciterById } from '../lib/reciters'
+import { useSync } from '../app/SyncContext'
+import { getRecordings } from '../storage/db'
+import { verseLabel } from '../i18n/labels'
 
 const arabicDigits = new Intl.NumberFormat('ar-EG', { useGrouping: false })
 
@@ -40,7 +47,8 @@ export function MushafPage() {
 }
 
 function Reader({ page }: { page: number }) {
-  const { quran, settings, updateSettings } = useApp()
+  const { quran, settings, updateSettings, recitations } = useApp()
+  const sync = useSync()
   const i18n = useI18n()
   const { t, num } = i18n
   const navigate = useNavigate()
@@ -51,9 +59,93 @@ function Reader({ page }: { page: number }) {
   const swipe = useRef<{ x: number; y: number } | null>(null)
   const headingRef = useRef<HTMLHeadingElement>(null)
 
+  // Listening.
+  const [listenOpen, setListenOpen] = useState(false)
+  const [mine, setMine] = useState<Map<number, MyRecording>>(new Map())
+  const [localSurahs, setLocalSurahs] = useState<Set<number>>(new Set())
+  const [downloading, setDownloading] = useState(false)
+  const pendingPlay = useRef<number | null>(null)
+
+  // The user's recordings, as playable URLs.
+  useEffect(() => {
+    let live = true
+    let urls: string[] = []
+    void getRecordings().then((recs) => {
+      if (!live) return
+      urls = recs.map((r) => URL.createObjectURL(r.blob))
+      setMine(new Map(recs.map((r, k) => [r.surah, { url: urls[k]!, timings: r.timings }])))
+      setLocalSurahs(new Set(recs.map((r) => r.surah)))
+    })
+    return () => {
+      live = false
+      urls.forEach((u) => URL.revokeObjectURL(u))
+    }
+  }, [recitations])
+
+  const describe = useCallback(
+    (i: number) => {
+      const r = reciterById(settings.reciter)
+      return {
+        title: verseLabel(i18n, quran, i),
+        artist:
+          settings.reciter === MINE ? i18n.t.player.you : i18n.lang === 'ar' ? (r?.nameAr ?? '') : (r?.name ?? ''),
+      }
+    },
+    [settings.reciter, i18n, quran],
+  )
+
+  const player = usePlayer({
+    quran,
+    reciter: settings.reciter,
+    repeat: settings.playRepeat,
+    speed: settings.playSpeed,
+    mine,
+    describe,
+  })
+
+  const playFrom = useCallback(
+    async (i: number) => {
+      const surah = quran.surahOf(i).n
+      if (settings.reciter === MINE && !mine.has(surah)) {
+        const remote = sync.remoteRecordings.find((r) => r.surah === surah)
+        if (remote) {
+          setDownloading(true)
+          try {
+            await sync.downloadRecording(remote)
+            pendingPlay.current = i
+          } finally {
+            setDownloading(false)
+          }
+          // The new recording arrives through `recitations`; play once it's loaded.
+          return
+        }
+      }
+      player.play(i)
+    },
+    [quran, settings.reciter, mine, sync, player],
+  )
+
+  useEffect(() => {
+    const i = pendingPlay.current
+    if (i !== null && mine.has(quran.surahOf(i).n)) {
+      pendingPlay.current = null
+      player.play(i)
+    }
+  }, [mine, quran, player])
+
+  const hasMine = localSurahs.size > 0 || sync.remoteRecordings.length > 0
+
   const [first, last] = quran.pageRange(page)
   const segments = segmentsOf(first, last, (i) => quran.surahOf(i))
   const juz = quran.juzOf(first)
+
+  // Turn the page when playback moves past it.
+  const playingIndex = player.index
+  useEffect(() => {
+    if (playingIndex === null) return
+    const p = quran.pageOf(playingIndex)
+    if (p !== page) navigate(`/mushaf/${p}`, { replace: true })
+  }, [playingIndex, page, quran, navigate])
 
   useEffect(() => {
     void setKv('lastPage', page)
@@ -139,6 +231,12 @@ function Reader({ page }: { page: number }) {
         <Link to="/mushaf" className="btn btn--quiet">
           {t.mushaf.index}
         </Link>
+        {!listenOpen && (
+          <button type="button" className="btn" onClick={() => setListenOpen(true)}>
+            <HeadphonesIcon />
+            {t.player.listen}
+          </button>
+        )}
         <label className="toggle">
           <input
             type="checkbox"
@@ -171,8 +269,13 @@ function Reader({ page }: { page: number }) {
                 {seg.indices.map((i) => {
                   const ayah = i - seg.surah.start + 1
                   return (
-                    <li key={i} className="tr-ayah">
-                      <Ayahs indices={[i]} className="quran--start" />
+                    <li key={i} className={`tr-ayah${player.index === i ? ' tr-ayah--active' : ''}`}>
+                      <Ayahs
+                        indices={[i]}
+                        className="quran--start"
+                        active={player.index}
+                        onAyahClick={listenOpen ? (k) => void playFrom(k) : undefined}
+                      />
                       <p className="translation" lang="en" dir="ltr">
                         <span className="translation__ref">
                           {seg.surah.n}:{ayah}
@@ -184,7 +287,12 @@ function Reader({ page }: { page: number }) {
                 })}
               </ol>
             ) : (
-              <Ayahs indices={seg.indices} className="quran--page" />
+              <Ayahs
+                indices={seg.indices}
+                className="quran--page"
+                active={player.index}
+                onAyahClick={listenOpen ? (k) => void playFrom(k) : undefined}
+              />
             )}
           </section>
         ))}
@@ -208,6 +316,20 @@ function Reader({ page }: { page: number }) {
           {arabicDigits.format(page)}
         </footer>
       </article>
+
+      {listenOpen && (
+        <PlayerBar
+          player={player}
+          startIndex={first}
+          onPlay={(i) => void playFrom(i)}
+          hasMine={hasMine}
+          downloading={downloading}
+          onClose={() => {
+            player.stop()
+            setListenOpen(false)
+          }}
+        />
+      )}
 
       {/* Laid out right to left like the mushaf: previous on the right, next on the left. */}
       <nav className="reader__turn" dir="rtl" aria-label={t.mushaf.pageOf(num(page), num(PAGE_COUNT))}>
