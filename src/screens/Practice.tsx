@@ -10,6 +10,7 @@ import { SESSION_SIZES } from '../lib/settings'
 import { isDue } from '../lib/srs'
 import { QUARTER_COUNT } from '../lib/quran'
 import { Segmented } from '../components/controls'
+import { ModeIcon } from '../components/Art'
 import type { QuizRequest } from './Quiz'
 
 export function Practice() {
@@ -81,19 +82,20 @@ export function Practice() {
 
       <section className="section" aria-labelledby="mode-h">
         <h2 id="mode-h">{t.setup.mode}</h2>
-        <div className="modes" role="radiogroup" aria-labelledby="mode-h">
+        <div className="mode-grid" role="radiogroup" aria-labelledby="mode-h">
           {MODES.map((m: Mode) => (
-            <label key={m} className="mode">
+            <label key={m} className="mode-tile" data-mode={m}>
               <input
                 type="radio"
                 name="mode"
                 checked={settings.mode === m}
                 onChange={() => updateSettings({ mode: m })}
               />
-              <span>
-                <span className="mode__title">{t.modes[m].title}</span>
-                <br />
-                <span className="mode__body">{t.modes[m].body}</span>
+              <ModeIcon mode={m} />
+              <span className="mode-tile__title">{t.modes[m].title}</span>
+              <span className="mode-tile__body">{t.modes[m].body}</span>
+              <span className="mode-tile__check" aria-hidden="true">
+                ✓
               </span>
             </label>
           ))}

@@ -10,6 +10,8 @@ export type TextSize = 'm' | 'l' | 'xl'
 
 export interface Settings {
   lang: Lang
+  /** Optional, for the greeting on Home. */
+  name: string
   theme: Theme
   textSize: TextSize
   /** What the user has memorized; quizzes draw from here. */
@@ -45,6 +47,7 @@ export const EXTRA_AYAHS = { min: 0, max: 3 } as const
 export function defaultSettings(browserLang = 'en'): Settings {
   return {
     lang: browserLang.toLowerCase().startsWith('ar') ? 'ar' : 'en',
+    name: '',
     theme: 'system',
     textSize: 'l',
     memorized: [],
@@ -75,6 +78,7 @@ export function sanitizeSettings(value: unknown, base: Settings = defaultSetting
     typeof x === 'string' && (list as readonly string[]).includes(x) ? (x as T) : fallback
   return {
     lang: oneOf(v.lang, ['ar', 'en'], base.lang),
+    name: typeof v.name === 'string' ? v.name.trim().slice(0, 40) : base.name,
     theme: oneOf(v.theme, ['system', 'light', 'dark'], base.theme),
     textSize: oneOf(v.textSize, ['m', 'l', 'xl'], base.textSize),
     memorized: Array.isArray(v.memorized) ? v.memorized.filter(isScopePart).slice(0, 500) : base.memorized,

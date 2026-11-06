@@ -5,6 +5,7 @@ import { verseLabel } from '../i18n/labels'
 import { parseItem, itemAyahIndex, type ItemId } from '../lib/items'
 import type { Grade3 } from '../lib/srs'
 import { openingText } from '../lib/text'
+import { StarIcon } from '../components/Art'
 import type { QuizRequest } from './Quiz'
 
 export interface Result {
@@ -45,12 +46,26 @@ export function Summary({ results }: { results: Result[] }) {
     navigate('/quiz', { state: request })
   }
 
+  // Up to three stars, from the share of perfect answers.
+  const share = results.length ? count('perfect') / results.length : 0
+  const stars = !results.length ? 0 : share >= 0.9 ? 3 : share >= 0.6 ? 2 : 1
+
   return (
     <div className="stack">
-      <div className="section">
+      <div className="section" style={{ textAlign: 'center', alignItems: 'center' }}>
+        {stars > 0 && (
+          <div className="stars" role="img" aria-label={t.summary.starsLabel(num(stars))}>
+            {[1, 2, 3].map((k) => (
+              <span key={k} className={k <= stars ? 'star--on' : 'star--off'}>
+                <StarIcon filled={k <= stars} />
+              </span>
+            ))}
+          </div>
+        )}
         <h1 tabIndex={-1} ref={(el) => el?.focus()} style={{ outline: 'none' }}>
-          {t.summary.title}
+          {stars ? t.summary.cheer[stars as 1 | 2 | 3] : t.summary.title}
         </h1>
+        {stars > 0 && <p className="muted">{t.summary.title}</p>}
         <p className="visually-hidden">
           {t.summary.counts(num(count('perfect')), num(count('hesitated')), num(count('missed')))}
         </p>
@@ -95,7 +110,7 @@ export function Summary({ results }: { results: Result[] }) {
         <p>{t.summary.clean}</p>
       )}
 
-      <button type="button" className="btn btn--block" onClick={() => navigate('/')}>
+      <button type="button" className="btn btn--block" onClick={() => navigate('/practice')}>
         {t.summary.back}
       </button>
     </div>

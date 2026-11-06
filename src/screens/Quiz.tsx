@@ -13,6 +13,8 @@ import { Ayahs, PromptWords } from '../components/QuranText'
 import { Summary, type Result } from './Summary'
 import { CloseIcon, MicIcon } from '../components/Icons'
 import { RecitationBoard } from '../components/RecitationBoard'
+import { Burst } from '../components/Burst'
+import { GradeIcon } from '../components/Art'
 import { Dialog } from '../components/controls'
 import { speechSupported, useSpeech } from '../hooks/useSpeech'
 import { buildExpected, follow, suggestGrade, words as heardWords, type Expected } from '../lib/recitation'
@@ -37,7 +39,7 @@ function isRequest(v: unknown): v is QuizRequest {
 export function Quiz() {
   const location = useLocation()
   const request = location.state as unknown
-  if (!isRequest(request)) return <Navigate to="/" replace />
+  if (!isRequest(request)) return <Navigate to="/practice" replace />
   // A new key restarts the session when "practice again" starts another one.
   return <QuizSession key={location.key} request={request} />
 }
@@ -87,6 +89,8 @@ function QuizSession({ request }: { request: QuizRequest }) {
   const [recite, setRecite] = useState<{ expected: Expected[]; prompt: number; targetCount: number } | null>(null)
   /** Keep the microphone on from one question to the next. */
   const [voice, setVoice] = useState(false)
+  /** Bumped on each perfect answer, to play a little burst of stars. */
+  const [burst, setBurst] = useState(0)
   const [noticeOpen, setNoticeOpen] = useState(false)
   const warned = useRef(new Set<number>())
 
@@ -124,6 +128,7 @@ function QuizSession({ request }: { request: QuizRequest }) {
         setBusy(false)
       }
       setResults((r) => [...r, { itemId: question.itemId, grade: g }, ...extra])
+      if (g === 'perfect') setBurst((b) => b + 1)
       if (!keepVoice) setVoice(false)
       if (g === 'missed' && !requeued.has(question.itemId)) {
         requeued.add(question.itemId)
@@ -279,6 +284,7 @@ function QuizSession({ request }: { request: QuizRequest }) {
     if (question?.mode !== 'name' || choice === null) return
     const g: Grade3 = choice === question.quarter ? 'perfect' : 'missed'
     setResults((r) => [...r, { itemId: question.itemId, grade: g }])
+    if (g === 'perfect') setBurst((b) => b + 1)
     if (g === 'missed' && !requeued.has(question.itemId)) {
       requeued.add(question.itemId)
       setQueue((q) => {
@@ -507,6 +513,7 @@ function QuizSession({ request }: { request: QuizRequest }) {
 
   return (
     <div className="quiz">
+      {burst > 0 && <Burst key={burst} />}
       <div className="quiz__bar">
         <button
           type="button"
@@ -516,7 +523,7 @@ function QuizSession({ request }: { request: QuizRequest }) {
           onClick={() => {
             speech.stop()
             if (results.length) setQueue((q) => q.slice(0, pos))
-            else navigate('/')
+            else navigate('/practice')
           }}
         >
           <CloseIcon />
@@ -608,6 +615,7 @@ function QuizSession({ request }: { request: QuizRequest }) {
                   aria-keyshortcuts={String(k + 1)}
                   aria-description={suggested === g ? t.listen.suggested : undefined}
                 >
+                  <GradeIcon grade={g} />
                   {t.quiz.grades[g]}
                   {suggested === g && <span className="grade__tag">{t.listen.suggested}</span>}
                 </button>

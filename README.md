@@ -16,11 +16,18 @@
 Murajaah quizzes you on what you've memorized, and has the full mushaf to read page by page, with an optional English translation. You recite out loud, reveal the answer and mark how it went. The app remembers which ayahs and quarters are weak and asks those more often, using spaced repetition. It works offline, installs on your phone like an app, and can sync your progress across devices.
 
 <p align="center">
-  <img src="docs/screenshots/practice.png" width="200" alt="Choosing what to practice" />
-  <img src="docs/screenshots/ayah.png" width="200" alt="An ayah revealed with its location" />
-  <img src="docs/screenshots/mushaf.png" width="200" alt="A mushaf page with the English translation, in dark mode" />
-  <img src="docs/screenshots/progress-dark.png" width="200" alt="Progress map in dark mode" />
+  <img src="docs/screenshots/home.png" width="180" alt="Home with today's date, what's due and a button to start revising" />
+  <img src="docs/screenshots/practice.png" width="180" alt="Choosing what to practice, in Arabic" />
+  <img src="docs/screenshots/ayah.png" width="180" alt="An ayah revealed with its location and the three grade buttons" />
+  <img src="docs/screenshots/mushaf.png" width="180" alt="A mushaf page with the English translation, in dark mode" />
+  <img src="docs/screenshots/progress-dark.png" width="180" alt="Progress map in dark mode" />
 </p>
+
+## Home
+
+Home opens on today's date (Hijri and Gregorian), what's due, what you've answered today and your streak, with one button to start revising. Below it: where you stopped reading in the mushaf, the surah you're closest to recording, and a strip showing how strong your memorized rub's are. The first time, it explains the app and asks what you've memorized. Add your name in Settings and Home greets you with it.
+
+The design aims to be calm and easy for anyone, children included: large buttons, soft colours with one colour per quiz mode, and simple grades (Perfect!, Almost, Not yet) with a star when you get one right.
 
 ## What it quizzes
 
@@ -33,7 +40,7 @@ Murajaah quizzes you on what you've memorized, and has the full mushaf to read p
 
 - **Only what you've memorized.** Choose by juz, hizb, surah or any ayah range, and questions only come from there.
 - **Weakest first.** Every ayah and quarter has its own memory strength (the [FSRS](https://github.com/open-spaced-repetition/ts-fsrs) algorithm). Missed items come back later in the same session and sooner in future ones.
-- **Honest hints.** Reveal one more word, or the surah name. Using a word hint caps that answer at *hesitated*.
+- **Honest hints.** Reveal one more word, or the surah name. Using a word hint caps that answer at *Almost*.
 - **Recite aloud.** Turn on the microphone and recite: words appear as you say them correctly. On a wrong or skipped word you hear a short warning tone (and the phone vibrates), the right word shows in red, and the app waits until you say it. You can start from the beginning of the ayah or go back over it; that isn't counted as a mistake. Carry on past the verse as far as you like: every ayah you recite in full is recorded too. **Next question** grades what was heard and moves on with the microphone still on; **Stop listening** shows the answer to grade yourself. This uses the browser's own speech recognition (Chrome, Edge and Safari; it needs a connection). It hears words, not tajweed, and can mishear, so treat a warning as a prompt to check.
 - **Progress map.** All 240 quarters, juz by juz, coloured from weak to strong.
 - **The full mushaf.** Open any surah or juz and read the 604 Madani pages one by one, with surah headers and the basmala. Turn pages with the buttons, by swiping, or with the arrow keys, or jump straight to a page number. The app remembers where you stopped.

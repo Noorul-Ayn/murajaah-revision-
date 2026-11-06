@@ -34,7 +34,7 @@ test('three clean recitations on different days unlock recording, and the record
 }) => {
   test.slow()
   await memorizeSurah(page, '112', /Al-Ikhlaas/)
-  await page.getByRole('link', { name: 'Mushaf' }).click()
+  await page.getByRole('link', { name: 'Mushaf', exact: true }).click()
   await page.getByRole('link', { name: /Your recitation/ }).click()
   await page.getByRole('link', { name: /الإخلاص/ }).click()
   await expect(page.getByRole('button', { name: 'Record this surah' })).toBeDisabled()

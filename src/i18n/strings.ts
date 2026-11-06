@@ -35,7 +35,38 @@ const en = {
   loading: 'Loading the mushaf…',
   loadFailed: 'The Qur’an text could not be loaded. Check your connection and reload.',
   reload: 'Reload',
-  nav: { practice: 'Practice', mushaf: 'Mushaf', progress: 'Progress', settings: 'Settings' },
+  nav: { home: 'Home', practice: 'Practice', mushaf: 'Mushaf', progress: 'Progress', settings: 'Settings' },
+
+  home: {
+    greeting: (name: string) => (name ? `Assalamu alaykum, ${name}!` : 'Assalamu alaykum!'),
+    welcomeTitle: 'Revise what you’ve memorized, every day',
+    welcomeBody:
+      'Murajaah quizzes you on the parts of the Qur’an you know, listens while you recite, and brings back what’s slipping before it fades.',
+    featurePractice: 'Practice',
+    featurePracticeBody:
+      'Continue an ayah from its first words, recite how a rub’ begins, name it, or link one rub’ to the next.',
+    featureMushaf: 'The mushaf',
+    featureMushafBody: 'Read all 604 pages, with an English translation and 14 reciters to listen to.',
+    featureRecite: 'Your recitation',
+    featureReciteBody: 'Recite whole surahs from memory; once they’re clean on three days, record your own.',
+    start: 'Choose what you’ve memorized',
+    openMushaf: 'Open the mushaf',
+    today: 'Today',
+    due: 'Due now',
+    answered: 'Answered today',
+    streak: 'Day streak',
+    startRevision: (n: number, f: string) =>
+      n === 1 ? 'Start revising (1 question)' : `Start revising (${f} questions)`,
+    nothingDue: 'Nothing is due. Practice anyway to get ahead.',
+    mode: (mode: string) => `Mode: ${mode}`,
+    changePractice: 'Change what to practice',
+    continueReading: 'Continue reading',
+    startReading: 'Start reading from Al-Fatiha',
+    recitationNext: (surah: string, k: string, n: string) => `${surah}: ${k} of ${n} clean days`,
+    recitationReady: (surah: string) => `${surah} is ready to record`,
+    memorization: 'Your memorization',
+    seeProgress: 'See progress',
+  },
 
   memorized: {
     title: 'What you’ve memorized',
@@ -67,7 +98,7 @@ const en = {
   } satisfies Record<Mode, { title: string; body: string }>,
 
   setup: {
-    mode: 'What to practice',
+    mode: 'What would you like to practice?',
     from: 'Ask from',
     allMemorized: 'Everything I’ve memorized',
     questions: 'Questions',
@@ -93,9 +124,9 @@ const en = {
     showRub: 'Show which rub’',
     reveal: 'Show answer',
     hidden: enPlural('1 word hidden', '{n} words hidden'),
-    grades: { missed: 'Missed', hesitated: 'Hesitated', perfect: 'Perfect' } satisfies Record<Grade3, string>,
+    grades: { missed: 'Not yet', hesitated: 'Almost', perfect: 'Perfect!' } satisfies Record<Grade3, string>,
     howDid: 'How did it go?',
-    hintCap: 'You used a hint, so the best you can mark is hesitated.',
+    hintCap: 'You used a hint, so the best you can choose is Almost.',
     dontKnow: 'I don’t know',
     correct: 'Correct.',
     itWas: (label: string) => `It was ${label}.`,
@@ -233,7 +264,13 @@ const en = {
   summary: {
     title: 'Session complete',
     counts: (perfect: string, hesitated: string, missed: string) =>
-      `${perfect} perfect, ${hesitated} hesitated, ${missed} missed`,
+      `${perfect} perfect, ${hesitated} almost, ${missed} not yet`,
+    cheer: {
+      3: 'MashaAllah! Excellent revision.',
+      2: 'Well done! Keep it up.',
+      1: 'Good effort. Revising again makes it stick.',
+    },
+    starsLabel: (n: string) => `${n} of 3 stars`,
     toReview: 'To review',
     clean: 'No mistakes this time.',
     again: 'Practice these again',
@@ -267,6 +304,8 @@ const en = {
   settings: {
     title: 'Settings',
     language: 'Language',
+    name: 'Your name',
+    nameHint: 'Used in the greeting on Home. Leave it empty if you like.',
     theme: 'Appearance',
     themes: { system: 'Match device', light: 'Light', dark: 'Dark' } satisfies Record<Theme, string>,
     textSize: 'Qur’an text size',
@@ -361,7 +400,42 @@ const ar: Strings = {
   loading: 'جارٍ تحميل المصحف…',
   loadFailed: 'تعذّر تحميل نص القرآن. تحقّق من الاتصال ثم أعد التحميل.',
   reload: 'أعد التحميل',
-  nav: { practice: 'التسميع', mushaf: 'المصحف', progress: 'التقدّم', settings: 'الإعدادات' },
+  nav: { home: 'الرئيسية', practice: 'التسميع', mushaf: 'المصحف', progress: 'التقدّم', settings: 'الإعدادات' },
+
+  home: {
+    greeting: (name) => (name ? `السلام عليكم يا ${name}!` : 'السلام عليكم!'),
+    welcomeTitle: 'راجع محفوظك كل يوم',
+    welcomeBody: '«مراجعة» يختبرك فيما تحفظ من القرآن، ويستمع إليك وأنت تقرأ، ويعيد عليك ما بدأ يتفلّت قبل أن يضيع.',
+    featurePractice: 'التسميع',
+    featurePracticeBody: 'أكمل الآية من أوائل كلماتها، أو اتلُ أول الربع، أو سمِّه، أو اربط الربع بما بعده.',
+    featureMushaf: 'المصحف',
+    featureMushafBody: 'اقرأ الصفحات الستمئة وأربعًا، مع ترجمة إنجليزية و١٤ قارئًا تستمع إليهم.',
+    featureRecite: 'تلاوتك',
+    featureReciteBody: 'اقرأ سورًا كاملة من حفظك، فإذا سلمت من الأخطاء ثلاثة أيام سجّل تلاوتك.',
+    start: 'اختر محفوظك',
+    openMushaf: 'افتح المصحف',
+    today: 'اليوم',
+    due: 'حان وقتها',
+    answered: 'إجابات اليوم',
+    streak: 'أيام متتالية',
+    startRevision: (n, f) =>
+      n === 1
+        ? 'ابدأ المراجعة (سؤال واحد)'
+        : n === 2
+          ? 'ابدأ المراجعة (سؤالان)'
+          : n <= 10
+            ? `ابدأ المراجعة (${f} أسئلة)`
+            : `ابدأ المراجعة (${f} سؤالًا)`,
+    nothingDue: 'لا شيء حان وقته. راجع على كل حال لتسبق.',
+    mode: (mode) => `النوع: ${mode}`,
+    changePractice: 'غيّر نوع التسميع',
+    continueReading: 'تابع القراءة',
+    startReading: 'ابدأ القراءة من الفاتحة',
+    recitationNext: (surah, k, n) => `${surah}: ${k} من ${n} أيام بلا أخطاء`,
+    recitationReady: (surah) => `${surah} جاهزة للتسجيل`,
+    memorization: 'محفوظك',
+    seeProgress: 'اعرض تقدّمك',
+  },
 
   memorized: {
     title: 'محفوظك',
@@ -393,7 +467,7 @@ const ar: Strings = {
   },
 
   setup: {
-    mode: 'نوع التسميع',
+    mode: 'ماذا تريد أن تسمّع؟',
     from: 'الأسئلة من',
     allMemorized: 'كل محفوظي',
     questions: 'عدد الأسئلة',
@@ -449,9 +523,9 @@ const ar: Strings = {
       many: '{n} كلمة مخفية',
       other: '{n} كلمة مخفية',
     }),
-    grades: { missed: 'أخطأت', hesitated: 'تردّدت', perfect: 'أتقنت' },
+    grades: { missed: 'ليس بعد', hesitated: 'تقريبًا', perfect: 'ممتاز!' },
     howDid: 'كيف كان تسميعك؟',
-    hintCap: 'استعنت بتلميح، فأعلى ما يمكنك اختياره «تردّدت».',
+    hintCap: 'استعنت بتلميح، فأعلى ما يمكنك اختياره «تقريبًا».',
     dontKnow: 'لا أعرف',
     correct: 'صحيح.',
     itWas: (label) => `الصواب: ${label}.`,
@@ -591,7 +665,9 @@ const ar: Strings = {
 
   summary: {
     title: 'انتهى التسميع',
-    counts: (perfect, hesitated, missed) => `أتقنت ${perfect}، وتردّدت في ${hesitated}، وأخطأت في ${missed}`,
+    counts: (perfect, hesitated, missed) => `ممتاز ${perfect}، وتقريبًا ${hesitated}، وليس بعد ${missed}`,
+    cheer: { 3: 'ما شاء الله! مراجعة ممتازة.', 2: 'أحسنت! واصل.', 1: 'جهد طيب، والمراجعة تثبّت الحفظ.' },
+    starsLabel: (n) => `${n} من ٣ نجوم`,
     toReview: 'للمراجعة',
     clean: 'لا أخطاء هذه المرة.',
     again: 'سمّعها مرة أخرى',
@@ -625,6 +701,8 @@ const ar: Strings = {
   settings: {
     title: 'الإعدادات',
     language: 'اللغة',
+    name: 'اسمك',
+    nameHint: 'يظهر في الترحيب على الصفحة الرئيسية، ويمكنك تركه فارغًا.',
     theme: 'المظهر',
     themes: { system: 'حسب الجهاز', light: 'فاتح', dark: 'داكن' },
     textSize: 'حجم خط المصحف',

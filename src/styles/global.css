@@ -8,6 +8,10 @@
  * Colour: a soft amethyst palette chosen to be calm for long sessions —
  * lavender-tinted paper, a lilac board, deep plum ink and one amethyst accent.
  * Grade and strength colours (rose, amber, teal) are muted to sit with it.
+ *
+ * Friendly for every age: one clear typeface for Arabic and Latin (Readex
+ * Pro), big soft shapes, buttons that look pressable, and a pastel colour
+ * with an icon for each kind of practice so they can be told apart at a glance.
  */
 
 :root {
@@ -29,6 +33,20 @@
   --good: light-dark(#97c4b5, #4e8573);
   --focus: var(--accent);
 
+  /* A pastel and a deep tone for each kind of practice. */
+  --lilac: light-dark(#ece4fb, #2d2440);
+  --lilac-ink: light-dark(#5b3f94, #c9b5f2);
+  --mint: light-dark(#dcf3e9, #1f3a31);
+  --mint-ink: light-dark(#23704f, #8fdcb8);
+  --peach: light-dark(#fde6da, #42291f);
+  --peach-ink: light-dark(#a8502b, #f3b08f);
+  --sky: light-dark(#dcecfb, #1f3045);
+  --sky-ink: light-dark(#2a64a0, #9cc7f2);
+  --sun: light-dark(#fff1c7, #3d331a);
+  --sun-ink: light-dark(#8a6100, #f1cf6b);
+  --rose: light-dark(#fde2e6, #44222a);
+  --rose-ink: light-dark(#ac3a4f, #f2a1ae);
+
   --font-ui: 'Readex Pro Variable', 'Segoe UI', system-ui, sans-serif;
   --font-quran: 'Amiri Quran', 'Amiri', serif;
   --quran-size: 2rem;
@@ -39,7 +57,7 @@
   --step-2: 1.5625rem;
   --step-3: 1.953rem;
 
-  --radius: 10px;
+  --radius: 16px;
   --nav-h: 64px;
   --content: 40rem;
 
@@ -76,8 +94,8 @@ body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-ui);
-  font-size: var(--step-0);
-  line-height: 1.55;
+  font-size: 1.0625rem;
+  line-height: 1.5;
   font-optical-sizing: auto;
   -webkit-font-smoothing: antialiased;
 }
@@ -91,13 +109,13 @@ p {
 
 h1 {
   font-size: var(--step-2);
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.25;
 }
 
 h2 {
   font-size: var(--step-1);
-  font-weight: 550;
+  font-weight: 650;
   line-height: 1.3;
 }
 
@@ -193,7 +211,7 @@ select {
   bottom: 0;
   z-index: 10;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   height: calc(var(--nav-h) + env(safe-area-inset-bottom));
   padding-bottom: env(safe-area-inset-bottom);
   background: var(--surface);
@@ -326,15 +344,24 @@ select {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  min-height: 44px;
-  padding: 0.55rem 1.1rem;
-  border: 1px solid var(--line);
+  min-height: 48px;
+  padding: 0.55rem 1.2rem;
+  border: 1.5px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
   color: var(--ink);
-  font-weight: 500;
+  font-weight: 600;
   text-decoration: none;
   cursor: pointer;
+  box-shadow: 0 3px 0 var(--line);
+  transition:
+    transform 80ms ease,
+    box-shadow 80ms ease;
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--line);
 }
 
 .btn:hover {
@@ -350,6 +377,11 @@ select {
   background: var(--accent);
   border-color: var(--accent);
   color: var(--accent-ink);
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--accent) 60%, black);
+}
+
+.btn--primary:active:not(:disabled) {
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--accent) 60%, black);
 }
 
 .btn--primary:hover {
@@ -362,6 +394,11 @@ select {
   background: none;
   color: var(--accent);
   padding-inline: 0.5rem;
+  box-shadow: none;
+}
+
+.btn--quiet:active:not(:disabled) {
+  box-shadow: none;
 }
 
 .btn--danger {
@@ -373,7 +410,7 @@ select {
 }
 
 .btn--large {
-  min-height: 52px;
+  min-height: 56px;
   font-size: var(--step-1);
 }
 
@@ -410,11 +447,12 @@ select {
 .segmented span {
   display: inline-flex;
   align-items: center;
-  min-height: 40px;
-  padding: 0.35rem 0.9rem;
-  border: 1px solid var(--line);
+  min-height: 44px;
+  padding: 0.35rem 1rem;
+  border: 1.5px solid var(--line);
   border-radius: 999px;
   background: var(--surface);
+  font-weight: 550;
 }
 
 .segmented input:checked + span {
@@ -428,48 +466,115 @@ select {
   outline-offset: 2px;
 }
 
-/* ---------- Mode list (radio cards) ---------- */
+/* ---------- Mode tiles: a colour and an icon for each kind of practice ---------- */
 
-.modes {
-  display: flex;
-  flex-direction: column;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface);
-  overflow: hidden;
+.mode-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
 }
 
-.mode {
+.mode-tile {
   position: relative;
-  display: grid;
-  grid-template-columns: 1.25rem 1fr;
-  gap: 0.75rem;
-  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 1rem;
+  min-height: 9.5rem;
+  border-radius: 20px;
+  background: var(--tile-bg);
+  border: 2.5px solid transparent;
+  cursor: pointer;
+  transition: transform 100ms ease;
+}
+
+.mode-tile:active {
+  transform: scale(0.98);
+}
+
+.mode-tile input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
   cursor: pointer;
 }
 
-.mode + .mode {
-  border-top: 1px solid var(--line);
+.mode-tile svg {
+  width: 40px;
+  height: 40px;
+  color: var(--tile-ink);
 }
 
-.mode input {
-  margin: 0.3rem 0 0;
-  accent-color: var(--accent);
-  width: 1.1rem;
-  height: 1.1rem;
+.mode-tile__title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  line-height: 1.2;
+  color: var(--tile-ink);
 }
 
-.mode__title {
-  font-weight: 550;
-}
-
-.mode__body {
-  color: var(--ink-2);
+.mode-tile__body {
   font-size: var(--step--1);
+  line-height: 1.35;
+  color: var(--ink-2);
 }
 
-.mode:has(input:checked) {
-  background: var(--accent-soft);
+.mode-tile__check {
+  position: absolute;
+  top: 0.6rem;
+  inset-inline-end: 0.6rem;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--tile-ink);
+  color: var(--tile-bg);
+  font-weight: 800;
+  font-size: 0.85rem;
+  opacity: 0;
+  transform: scale(0.6);
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease;
+}
+
+.mode-tile:has(input:checked) {
+  border-color: var(--tile-ink);
+  box-shadow: 0 4px 0 color-mix(in srgb, var(--tile-ink) 30%, transparent);
+}
+
+.mode-tile:has(input:checked) .mode-tile__check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.mode-tile:has(input:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.mode-tile[data-mode='ayah'] {
+  --tile-bg: var(--lilac);
+  --tile-ink: var(--lilac-ink);
+}
+.mode-tile[data-mode='open'] {
+  --tile-bg: var(--mint);
+  --tile-ink: var(--mint-ink);
+}
+.mode-tile[data-mode='name'] {
+  --tile-bg: var(--peach);
+  --tile-ink: var(--peach-ink);
+}
+.mode-tile[data-mode='link'] {
+  --tile-bg: var(--sky);
+  --tile-ink: var(--sky-ink);
+}
+
+@media (max-width: 22rem) {
+  .mode-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ---------- Stepper ---------- */
@@ -688,26 +793,43 @@ select {
 }
 
 .grade {
-  min-height: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  min-height: 72px;
   border-radius: var(--radius);
-  border: 1.5px solid currentColor;
-  background: var(--surface);
-  font-weight: 600;
+  border: 2px solid transparent;
+  font-weight: 700;
+  font-size: var(--step-0);
   cursor: pointer;
+  transition: transform 80ms ease;
+}
+
+.grade svg {
+  width: 26px;
+  height: 26px;
+}
+
+.grade:active:not(:disabled) {
+  transform: scale(0.96);
 }
 
 .grade--missed {
-  color: var(--vermilion);
+  color: var(--rose-ink);
+  background: var(--rose);
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--rose-ink) 35%, transparent);
 }
 .grade--hesitated {
-  color: var(--saffron);
+  color: var(--sun-ink);
+  background: var(--sun);
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--sun-ink) 35%, transparent);
 }
 .grade--perfect {
-  color: var(--verdigris);
-}
-
-.grade:hover {
-  background: color-mix(in srgb, currentColor 10%, var(--surface));
+  color: var(--mint-ink);
+  background: var(--mint);
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--mint-ink) 35%, transparent);
 }
 
 .grade:disabled {
@@ -824,8 +946,7 @@ select {
 }
 
 .grade--suggested {
-  background: color-mix(in srgb, currentColor 14%, var(--surface));
-  border-width: 2.5px;
+  border-color: currentColor;
 }
 
 .grade__tag {
@@ -837,6 +958,99 @@ select {
 
 @media (prefers-reduced-motion: reduce) {
   .rw--said {
+    animation: none;
+  }
+}
+
+/* ---------- Celebration ---------- */
+
+.quiz {
+  position: relative;
+}
+
+.burst {
+  position: absolute;
+  top: 9rem;
+  left: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.burst span {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  margin: -11px;
+  color: var(--sun-ink);
+  animation: star-out 750ms ease-out forwards;
+}
+
+.burst span:nth-child(even) {
+  color: var(--accent);
+  width: 16px;
+  height: 16px;
+  margin: -8px;
+}
+
+@keyframes star-out {
+  0% {
+    transform: rotate(var(--a)) translateY(0) scale(0.3);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(var(--a)) translateY(calc(-1 * var(--d))) scale(1);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .burst {
+    display: none;
+  }
+}
+
+.stars {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  color: var(--sun-ink);
+}
+
+.stars svg {
+  width: 52px;
+  height: 52px;
+}
+
+.stars .star--off {
+  color: var(--line);
+}
+
+.stars .star--on {
+  animation: star-pop 400ms cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+
+.stars .star--on:nth-child(2) {
+  animation-delay: 150ms;
+}
+.stars .star--on:nth-child(3) {
+  animation-delay: 300ms;
+}
+
+@keyframes star-pop {
+  from {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stars .star--on {
     animation: none;
   }
 }
@@ -1525,6 +1739,167 @@ a.surah-row {
 
 .ok-text {
   color: var(--verdigris);
+}
+
+/* ---------- Home ---------- */
+
+.strength-bar {
+  display: flex;
+  gap: 3px;
+  height: 14px;
+}
+
+.strength-bar .cell {
+  aspect-ratio: auto;
+  height: 100%;
+  min-width: 6px;
+  cursor: default;
+}
+
+.features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.features li {
+  padding: 1rem;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-inline-start: 4px solid var(--accent);
+}
+
+.features h2 {
+  font-size: var(--step-0);
+  margin-bottom: 0.2rem;
+}
+
+/* ---------- Home: greeting and today ---------- */
+
+.hero {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 1.25rem 1rem;
+  border-radius: 24px;
+  background: var(--lilac);
+}
+
+.hero h1 {
+  color: var(--lilac-ink);
+  font-size: var(--step-2);
+}
+
+.hero__hello {
+  color: var(--lilac-ink);
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+}
+
+.hero__date {
+  margin-top: 0.35rem;
+  color: var(--ink-2);
+  font-size: var(--step--1);
+  line-height: 1.45;
+}
+
+.hero__date span {
+  opacity: 0.85;
+}
+
+.home-art {
+  width: 128px;
+  height: auto;
+}
+
+@media (max-width: 22rem) {
+  .home-art {
+    width: 96px;
+  }
+}
+
+.today {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.today__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: var(--radius);
+  background: var(--tone-bg);
+}
+
+.today__item strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: var(--step-2);
+  line-height: 1.15;
+  color: var(--tone-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.today__item strong svg {
+  width: 22px;
+  height: 22px;
+}
+
+.today__item span {
+  font-size: var(--step--1);
+  color: var(--ink-2);
+  line-height: 1.3;
+}
+
+.today__item--lilac {
+  --tone-bg: var(--lilac);
+  --tone-ink: var(--lilac-ink);
+}
+.today__item--mint {
+  --tone-bg: var(--mint);
+  --tone-ink: var(--mint-ink);
+}
+.today__item--sun {
+  --tone-bg: var(--sun);
+  --tone-ink: var(--sun-ink);
+}
+
+.continue--tile {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  column-gap: 0.85rem;
+  align-items: center;
+  background: var(--tone-bg);
+}
+
+.continue--tile svg {
+  grid-row: span 2;
+  width: 44px;
+  height: 44px;
+  padding: 8px;
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--tone-ink);
+}
+
+.continue--tile .continue__label {
+  color: var(--tone-ink);
+}
+
+.continue--tile[data-tone='sky'] {
+  --tone-bg: var(--sky);
+  --tone-ink: var(--sky-ink);
+}
+.continue--tile[data-tone='sun'] {
+  --tone-bg: var(--sun);
+  --tone-ink: var(--sun-ink);
 }
 
 /* ---------- Dialog and toast ---------- */

@@ -29,6 +29,16 @@ export function BookIcon() {
   )
 }
 
+export function HomeIcon() {
+  return (
+    <svg {...base}>
+      <path d="M4 11.5 12 4.5l8 7" />
+      <path d="M6 10v9.5h12V10" />
+      <path d="M10 19.5v-5h4v5" />
+    </svg>
+  )
+}
+
 export function GridIcon() {
   return (
     <svg {...base}>

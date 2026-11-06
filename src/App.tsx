@@ -5,9 +5,10 @@ import { AppProvider } from './app/AppContext'
 import { SyncProvider } from './app/SyncContext'
 import { FocusContext } from './app/focus'
 import { useI18n } from './i18n/I18n'
-import { BookIcon, GridIcon, LawhIcon, SlidersIcon } from './components/Icons'
+import { BookIcon, GridIcon, HomeIcon, LawhIcon, SlidersIcon } from './components/Icons'
 import { ToastProvider, useToast } from './components/Toast'
 import { Practice } from './screens/Practice'
+import { Home } from './screens/Home'
 import { Quiz } from './screens/Quiz'
 import { Progress } from './screens/Progress'
 import { Settings } from './screens/Settings'
@@ -99,6 +100,10 @@ function Shell() {
         {!inQuiz && (
           <nav className="nav" aria-label={t.appName}>
             <NavLink to="/" end>
+              <HomeIcon />
+              {t.nav.home}
+            </NavLink>
+            <NavLink to="/practice">
               <LawhIcon />
               {t.nav.practice}
             </NavLink>
@@ -120,7 +125,8 @@ function Shell() {
       <main className="main" style={inQuiz ? { paddingBottom: '1.5rem' } : undefined}>
         <FocusContext.Provider value={setFocus}>
           <Routes>
-            <Route path="/" element={<Practice />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/practice" element={<Practice />} />
             <Route path="/quiz" element={<Quiz />} />
             <Route path="/progress" element={<Progress />} />
             <Route path="/settings" element={<Settings />} />
@@ -129,7 +135,7 @@ function Shell() {
             <Route path="/mushaf/:page" element={<MushafPage />} />
             <Route path="/recite" element={<ReciteIndex />} />
             <Route path="/recite/:surah" element={<ReciteSurah />} />
-            <Route path="*" element={<Practice />} />
+            <Route path="*" element={<Home />} />
           </Routes>
         </FocusContext.Provider>
       </main>

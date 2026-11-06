@@ -22,7 +22,8 @@ test('a first session from memorization to progress map', async ({ page }) => {
     await page.getByRole('button', { name: 'Perfect' }).click()
   }
 
-  await expect(page.getByRole('heading', { name: 'Session complete' })).toBeVisible()
+  await expect(page.getByText('Session complete', { exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'MashaAllah! Excellent revision.' })).toBeVisible()
   await expect(page.getByText('No mistakes this time.')).toBeVisible()
 
   await page.getByRole('link', { name: 'Progress' }).click()
@@ -31,12 +32,26 @@ test('a first session from memorization to progress map', async ({ page }) => {
   await expect(page.locator('.map .cell[data-s="out"]')).toHaveCount(232)
 })
 
+test('home shows today’s revision, and where reading left off', async ({ page }) => {
+  await page.goto('/')
+  await expect(page.getByRole('heading', { name: 'Revise what you’ve memorized, every day' })).toBeVisible()
+  await page.getByRole('link', { name: 'Open the mushaf' }).click()
+  await page.getByRole('button', { name: 'Next page' }).click()
+  await page.goto('/#/memorized')
+  await page.getByRole('button', { name: 'Juz 30', exact: true }).click()
+  await page.getByRole('link', { name: 'Home' }).click()
+  await expect(page.getByRole('heading', { name: 'Today' })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Continue reading.*Page 2/ })).toBeVisible()
+  await page.getByRole('button', { name: /^Start revising/ }).click()
+  await expect(page.getByText(/^1 of /)).toBeVisible()
+})
+
 test('a missed ayah comes back later in the same session', async ({ page }) => {
   await chooseJuz30(page)
   await page.getByRole('radio', { name: '10' }).check()
   await page.getByRole('button', { name: 'Start 10 questions' }).click()
   await page.getByRole('button', { name: 'Show answer' }).click()
-  await page.getByRole('button', { name: 'Missed' }).click()
+  await page.getByRole('button', { name: 'Not yet' }).click()
   await expect(page.getByText('2 of 11')).toBeVisible()
 })
 
@@ -46,7 +61,7 @@ test('word hints cap the grade at hesitated', async ({ page }) => {
   await page.getByRole('button', { name: 'Show next word' }).click()
   await page.getByRole('button', { name: 'Show answer' }).click()
   await expect(page.getByRole('button', { name: 'Perfect' })).toBeDisabled()
-  await expect(page.getByRole('button', { name: 'Hesitated' })).toBeEnabled()
+  await expect(page.getByRole('button', { name: 'Almost' })).toBeEnabled()
 })
 
 test('naming a rub’ is checked automatically', async ({ page }) => {
@@ -90,7 +105,7 @@ test('works offline once loaded', async ({ page, context, browserName }) => {
 
 test('the mushaf opens by surah, turns pages and shows a translation', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('link', { name: 'Mushaf' }).click()
+  await page.getByRole('link', { name: 'Mushaf', exact: true }).click()
   await page.getByRole('link', { name: /Al-Kahf/ }).click()
   await expect(page).toHaveURL(/#\/mushaf\/293$/)
   await expect(page.getByRole('heading', { name: 'Al-Kahf' })).toBeVisible()

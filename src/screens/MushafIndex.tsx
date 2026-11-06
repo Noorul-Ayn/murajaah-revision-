@@ -8,6 +8,7 @@ import { foldSearch } from '../lib/search'
 import { openingText } from '../lib/text'
 import { getKv } from '../storage/db'
 import { Segmented } from '../components/controls'
+import { BookTile, MicTile } from '../components/Art'
 
 export function MushafIndex() {
   const { quran } = useApp()
@@ -38,7 +39,8 @@ export function MushafIndex() {
       <h1>{t.mushaf.title}</h1>
 
       {lastPage && (
-        <Link to={`/mushaf/${lastPage}`} className="continue">
+        <Link to={`/mushaf/${lastPage}`} className="continue continue--tile" data-tone="sky">
+          <BookTile />
           <span className="continue__label">{t.mushaf.continue}</span>
           <span className="continue__where">
             {t.mushaf.continueAt(num(lastPage), i18n.surahName(quran.surahOf(quran.pageRange(lastPage)[0])))}
@@ -46,7 +48,8 @@ export function MushafIndex() {
         </Link>
       )}
 
-      <Link to="/recite" className="continue">
+      <Link to="/recite" className="continue continue--tile" data-tone="sun">
+        <MicTile />
         <span className="continue__label">{t.recite.title}</span>
         <span className="continue__where">{t.recite.open}</span>
       </Link>

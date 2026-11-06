@@ -4,6 +4,8 @@
 
 First release.
 
+- An easy, friendly design: large pressable buttons, soft colours with one colour per quiz mode, simple grades (Perfect!, Almost, Not yet), a star burst on a perfect answer and stars on the summary. Optional name greeting.
+- Home: today's date (Hijri and Gregorian), what's due, today's answers and streak, start revising in one tap, continue reading, your recitation, and a memorization strength strip.
 - Four quiz modes: continue the ayah, start of a rub', name the rub', link the quarters.
 - Choose what you've memorized by juz, hizb, surah or ayah range.
 - Spaced repetition (FSRS) per ayah and per quarter, weakest first; missed items return within the session.

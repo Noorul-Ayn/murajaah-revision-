@@ -235,7 +235,7 @@ export function Memorized() {
         )}
       </section>
 
-      <button type="button" className="btn btn--primary btn--large btn--block" onClick={() => navigate('/')}>
+      <button type="button" className="btn btn--primary btn--large btn--block" onClick={() => navigate('/practice')}>
         {t.memorized.done}
       </button>
     </div>

@@ -54,6 +54,17 @@ export function Settings() {
           ]}
           onChange={(lang) => updateSettings({ lang })}
         />
+        <label className="field">
+          <span>{t.settings.name}</span>
+          <input
+            className="input"
+            value={settings.name}
+            maxLength={40}
+            autoComplete="given-name"
+            onChange={(e) => updateSettings({ name: e.target.value })}
+          />
+          <span className="muted small">{t.settings.nameHint}</span>
+        </label>
         <Segmented<Theme>
           legend={t.settings.theme}
           value={settings.theme}

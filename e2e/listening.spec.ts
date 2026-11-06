@@ -50,9 +50,9 @@ test('reciting aloud follows the words, keeps going past the verse, warns on a s
   // Stop listening: the answer shows, with a suggested grade to confirm.
   await page.getByRole('button', { name: 'Stop listening' }).click()
   await expect(page.getByText('1 slip. Check the grade, then confirm it.')).toBeVisible()
-  await expect(page.getByRole('button', { name: /Hesitated/ })).toHaveClass(/grade--suggested/)
+  await expect(page.getByRole('button', { name: /Almost/ })).toHaveClass(/grade--suggested/)
   await expect(page.locator('.rw--slip')).toHaveCount(1)
-  await page.getByRole('button', { name: /Hesitated/ }).click()
+  await page.getByRole('button', { name: /Almost/ }).click()
 
   // Voice mode is off now: the last question waits for a tap.
   await expect(page.getByText('3 of 3')).toBeVisible()
@@ -60,7 +60,7 @@ test('reciting aloud follows the words, keeps going past the verse, warns on a s
   await page.getByRole('button', { name: 'Show answer' }).click()
   await page.getByRole('button', { name: /Perfect/ }).click()
 
-  // 112:1 and 112:4 perfect, 112:3 perfect while carrying on, then hesitated as its own question.
-  await expect(page.getByRole('heading', { name: 'Session complete' })).toBeVisible()
-  await expect(page.getByText('3 perfect, 1 hesitated, 0 missed')).toBeAttached()
+  // 112:1 and 112:4 perfect, 112:3 perfect while carrying on, then almost as its own question.
+  await expect(page.getByText('Session complete', { exact: true })).toBeVisible()
+  await expect(page.getByText('3 perfect, 1 almost, 0 not yet')).toBeAttached()
 })
