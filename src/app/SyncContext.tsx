@@ -1,0 +1,169 @@
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import type { Session } from '@supabase/supabase-js'
+import { supabase, syncConfigured } from '../sync/client'
+import { deleteCloudData, syncNow } from '../sync/sync'
+import { clearProgress, getKv, markAllUnsynced, setKv } from '../storage/db'
+import { useApp } from './AppContext'
+
+export type SyncStatus =
+  | { kind: 'idle' }
+  | { kind: 'syncing' }
+  | { kind: 'synced'; at: number }
+  | { kind: 'offline' }
+  | { kind: 'error'; message: string }
+
+export interface Sync {
+  /** False when the build has no Supabase configuration. */
+  available: boolean
+  email: string | null
+  status: SyncStatus
+  sendCode: (email: string) => Promise<void>
+  verifyCode: (email: string, code: string) => Promise<void>
+  syncNow: () => Promise<void>
+  signOut: (keepLocal: boolean) => Promise<void>
+  deleteCloud: () => Promise<void>
+  deleteAccount: () => Promise<void>
+}
+
+const SyncContext = createContext<Sync | null>(null)
+
+export function useSync(): Sync {
+  const s = useContext(SyncContext)
+  if (!s) throw new Error('useSync outside SyncProvider')
+  return s
+}
+
+const errorMessage = (e: unknown) =>
+  e instanceof Error ? e.message : typeof e === 'object' && e && 'message' in e ? String(e.message) : String(e)
+
+/** Debounce after a local change before pushing it. */
+const PUSH_DELAY_MS = 4000
+
+export function SyncProvider({ children }: { children: ReactNode }) {
+  const app = useApp()
+  const [session, setSession] = useState<Session | null>(null)
+  const [status, setStatus] = useState<SyncStatus>({ kind: 'idle' })
+  const running = useRef<Promise<void> | null>(null)
+  const again = useRef(false)
+  const appRef = useRef(app)
+  useEffect(() => {
+    appRef.current = app
+  }, [app])
+
+  useEffect(() => {
+    if (!supabase) return
+    void getKv<number>('lastSync').then((at) => at && setStatus({ kind: 'synced', at }))
+    supabase.auth.getSession().then(({ data }) => setSession(data.session))
+    const { data } = supabase.auth.onAuthStateChange((_event, s) => setSession(s))
+    return () => data.subscription.unsubscribe()
+  }, [])
+
+  const userId = session?.user.id ?? null
+
+  const run = useCallback(async (): Promise<void> => {
+    if (!supabase || !userId) return
+    if (running.current) {
+      again.current = true
+      return running.current
+    }
+    if (!navigator.onLine) {
+      setStatus({ kind: 'offline' })
+      return
+    }
+    const job = (async () => {
+      setStatus({ kind: 'syncing' })
+      try {
+        do {
+          again.current = false
+          const result = await syncNow(supabase, userId)
+          if (result.settings) appRef.current.replaceSettings(result.settings)
+          if (result.pulled > 0) await appRef.current.reloadProgress()
+        } while (again.current)
+        const at = Date.now()
+        await setKv('lastSync', at)
+        setStatus({ kind: 'synced', at })
+      } catch (e) {
+        setStatus(navigator.onLine ? { kind: 'error', message: errorMessage(e) } : { kind: 'offline' })
+      } finally {
+        running.current = null
+      }
+    })()
+    running.current = job
+    return job
+  }, [userId])
+
+  // Sync on sign-in, when the app comes back to the foreground, and when the
+  // connection returns.
+  useEffect(() => {
+    if (!userId) return
+    const first = window.setTimeout(() => void run(), 0)
+    const onVisible = () => document.visibilityState === 'visible' && void run()
+    const onOnline = () => void run()
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('online', onOnline)
+    const timer = window.setInterval(() => void run(), 5 * 60 * 1000)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('online', onOnline)
+      window.clearInterval(timer)
+      window.clearTimeout(first)
+    }
+  }, [userId, run])
+
+  // Push local changes shortly after they happen.
+  useEffect(() => {
+    if (!userId || app.changes === 0) return
+    const timer = window.setTimeout(() => void run(), PUSH_DELAY_MS)
+    return () => window.clearTimeout(timer)
+  }, [app.changes, userId, run])
+
+  const value = useMemo<Sync>(
+    () => ({
+      available: syncConfigured,
+      email: session?.user.email ?? null,
+      status,
+      sendCode: async (email) => {
+        if (!supabase) return
+        const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } })
+        if (error) throw error
+      },
+      verifyCode: async (email, code) => {
+        if (!supabase) return
+        const { error } = await supabase.auth.verifyOtp({ email, token: code, type: 'email' })
+        if (error) throw error
+      },
+      syncNow: run,
+      signOut: async (keepLocal) => {
+        if (!supabase) return
+        await run().catch(() => undefined)
+        await supabase.auth.signOut()
+        await setKv('lastSync', null)
+        setStatus({ kind: 'idle' })
+        if (!keepLocal) {
+          await clearProgress()
+          await setKv('owner', null)
+          await appRef.current.reloadProgress()
+        }
+      },
+      deleteCloud: async () => {
+        if (!supabase || !userId) return
+        await deleteCloudData(supabase, userId)
+        await setKv('sync', null)
+      },
+      deleteAccount: async () => {
+        if (!supabase || !userId) return
+        const { error } = await supabase.rpc('delete_own_account')
+        if (error) throw error
+        await supabase.auth.signOut({ scope: 'local' })
+        await markAllUnsynced()
+        await setKv('owner', null)
+        await setKv('sync', null)
+        await setKv('lastSync', null)
+        setStatus({ kind: 'idle' })
+      },
+    }),
+    [session, status, run, userId],
+  )
+
+  return <SyncContext.Provider value={value}>{children}</SyncContext.Provider>
+}

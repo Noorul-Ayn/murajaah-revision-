@@ -1,0 +1,10 @@
+dist
+dev-dist
+coverage
+playwright-report
+test-results
+package-lock.json
+data/tanzil
+src/data
+tests/fixtures
+*.md

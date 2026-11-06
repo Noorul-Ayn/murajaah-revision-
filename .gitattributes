@@ -1,0 +1,6 @@
+* text=auto eol=lf
+*.png binary
+*.woff2 binary
+# Generated or verbatim third-party data: never diff or merge by hand.
+src/data/*.json -diff linguist-generated
+data/tanzil/* -text -diff linguist-vendored
