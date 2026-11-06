@@ -52,6 +52,8 @@ export default defineConfig({
           },
         ],
         navigateFallback: 'index.html',
+        // The daily reminder's push and notification-tap handlers.
+        importScripts: ['push-sw.js'],
       },
     }),
   ],

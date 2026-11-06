@@ -7,16 +7,18 @@ export function Segmented<T extends string | number>({
   options,
   onChange,
   name,
+  className,
 }: {
   legend: string
   value: T
   options: readonly { value: T; label: string }[]
   onChange: (v: T) => void
   name?: string
+  className?: string
 }) {
   const auto = useId()
   return (
-    <fieldset className="segmented">
+    <fieldset className={`segmented${className ? ` ${className}` : ''}`}>
       <legend>{legend}</legend>
       {options.map((o) => (
         <label key={String(o.value)}>

@@ -30,6 +30,8 @@ export interface Settings {
   translation: TranslationId
   /** Whether the mushaf reader shows the translation under each ayah. */
   showTranslation: boolean
+  /** Without the translation: the page as printed (fifteen lines) rather than flowing text. */
+  printedPage: boolean
   /** Reciting aloud: play a warning tone on a slip. */
   listenSound: boolean
   /** Reciting aloud: vibrate on a slip (phones). */
@@ -62,6 +64,7 @@ export function defaultSettings(browserLang = 'en'): Settings {
     mushaf: '1405',
     translation: 'en-sahih',
     showTranslation: false,
+    printedPage: true,
     listenSound: true,
     listenVibrate: true,
     reciter: 'alafasy',
@@ -98,6 +101,7 @@ export function sanitizeSettings(value: unknown, base: Settings = defaultSetting
       base.translation,
     ),
     showTranslation: typeof v.showTranslation === 'boolean' ? v.showTranslation : base.showTranslation,
+    printedPage: typeof v.printedPage === 'boolean' ? v.printedPage : base.printedPage,
     listenSound: typeof v.listenSound === 'boolean' ? v.listenSound : base.listenSound,
     listenVibrate: typeof v.listenVibrate === 'boolean' ? v.listenVibrate : base.listenVibrate,
     reciter: oneOf(v.reciter, [...RECITERS.map((r) => r.id), MINE], base.reciter),

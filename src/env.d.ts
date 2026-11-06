@@ -2,6 +2,8 @@
 /// <reference types="vite-plugin-pwa/react" />
 
 interface ImportMetaEnv {
+  /** Web push public key for daily reminders (optional). */
+  readonly VITE_VAPID_PUBLIC_KEY?: string
   /** Supabase project URL, e.g. https://abcd.supabase.co. Leave unset for an offline-only build. */
   readonly VITE_SUPABASE_URL?: string
   /** Supabase publishable (anon) key. Public by design; row-level security protects the data. */

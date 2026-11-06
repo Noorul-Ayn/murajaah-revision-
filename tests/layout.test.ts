@@ -130,3 +130,35 @@ describe('grading a tap', () => {
     expect(v1405.grade(third, { page: 2, line: 8 })).toBe('hesitated')
   })
 })
+
+describe('pages as printed', () => {
+  it('every word of every page is on a text line, in order', () => {
+    for (const l of [v1405, v1421]) {
+      for (let p = 1; p <= 604; p++) {
+        const lines = l.printedLines(p)
+        const words = lines.flatMap((x) => (x.kind === 'text' ? x.words : []))
+        const [first, last] = l.quran.pageRange(p)
+        let expected = 0
+        for (let i = first; i <= last; i++) expected += l.wordLines(i).length
+        expect(words).toHaveLength(expected)
+        for (let k = 1; k < words.length; k++) expect(words[k]!.ayah).toBeGreaterThanOrEqual(words[k - 1]!.ayah)
+        for (const x of lines) if (x.kind === 'text') expect(x.words.length).toBeGreaterThan(0)
+      }
+    }
+  })
+
+  it('titles and basmalas name the surah they open', () => {
+    // Page 293: Al-Isra ends, Al-Kahf begins.
+    const lines = v1405.printedLines(293)
+    const header = lines.find((x) => x.kind === 'header')
+    expect(header).toEqual({ kind: 'header', surah: 18 })
+    // Page 76's last line is An-Nisa's title.
+    expect(v1405.printedLines(76)[14]).toEqual({ kind: 'header', surah: 4 })
+    expect(v1405.printedLines(77)[0]).toEqual({ kind: 'basmala', surah: 4 })
+  })
+
+  it('splits joined words the way the app does (بعد ما in 2:181)', () => {
+    const i = at(2, 181)
+    expect(v1405.wordLines(i)).toHaveLength(14)
+  })
+})

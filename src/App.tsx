@@ -17,6 +17,8 @@ import { MushafIndex } from './screens/MushafIndex'
 import { MushafPage } from './screens/MushafPage'
 import { ReciteIndex } from './screens/ReciteIndex'
 import { ReciteSurah } from './screens/ReciteSurah'
+import { Privacy } from './screens/Privacy'
+import { SetupKeys } from './screens/SetupKeys'
 
 function Wordmark() {
   const { t } = useI18n()
@@ -136,6 +138,8 @@ function Shell() {
             <Route path="/mushaf/:page" element={<MushafPage />} />
             <Route path="/recite" element={<ReciteIndex />} />
             <Route path="/recite/:surah" element={<ReciteSurah />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/setup/reminders" element={<SetupKeys />} />
             <Route path="*" element={<Home />} />
           </Routes>
         </FocusContext.Provider>

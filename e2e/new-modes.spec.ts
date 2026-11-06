@@ -58,11 +58,11 @@ test('the page quiz and page numbers follow the mushaf print', async ({ page }) 
   await page.getByRole('radio', { name: /Al-Mā’idah 78/ }).check()
   await page.goto('/#/mushaf/121')
   // Page 121 starts at Al-Ma'idah 78 in the 1421 AH print (77 in the 1405 AH one).
-  await expect(page.locator('.ayah-run').first()).toHaveAttribute('data-index', String(669 + 77))
+  await expect(page.locator('.page [data-index]').first()).toHaveAttribute('data-index', String(669 + 77))
   await page.goto('/#/settings')
   await page.getByRole('radio', { name: /Al-Mā’idah 77/ }).check()
   await page.goto('/#/mushaf/121')
-  await expect(page.locator('.ayah-run').first()).toHaveAttribute('data-index', String(669 + 76))
+  await expect(page.locator('.page [data-index]').first()).toHaveAttribute('data-index', String(669 + 76))
 })
 
 test('from the meaning: the English meaning is shown, the Arabic is recited', async ({ page }) => {

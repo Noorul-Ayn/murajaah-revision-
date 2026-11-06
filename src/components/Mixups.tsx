@@ -4,6 +4,7 @@ import { useI18n } from '../i18n/I18n'
 import { verseLabel } from '../i18n/labels'
 import { Compare } from './Compare'
 import { Dialog } from './controls'
+import { reportUrl } from '../lib/report'
 
 export interface Mixup {
   /** The ayah being recited. */
@@ -30,6 +31,12 @@ export function Mixups({
   const i18n = useI18n()
   const { t } = i18n
   const [comparing, setComparing] = useState<Mixup | null>(null)
+  const report =
+    comparing &&
+    reportUrl(`Mix-up: ${verseLabel(i18n, quran, comparing.ayah)} → ${verseLabel(i18n, quran, comparing.other)}`, [
+      `Reciting: ${verseLabel(i18n, quran, comparing.ayah)}`,
+      `Flagged as going into: ${verseLabel(i18n, quran, comparing.other)}`,
+    ])
   return (
     <>
       {mixups.map((m) => (
@@ -57,6 +64,13 @@ export function Mixups({
       >
         {comparing && simple && <Compare ayah={comparing.ayah} other={comparing.other} simple={simple} />}
         <p className="muted">{t.mixup.saved}</p>
+        {report && (
+          <p className="small">
+            <a href={report} target="_blank" rel="noreferrer">
+              {t.mixup.report}
+            </a>
+          </p>
+        )}
       </Dialog>
     </>
   )

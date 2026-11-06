@@ -58,7 +58,7 @@ used only to check the Tanzil data in tests.
 
 `data/qurancom/layout.json` and `src/data/layout.json` record, for the
 1405 AH and 1421 AH King Fahd Complex prints of the Madinah mushaf, the page
-and the line each ayah begins and ends on. They were fetched from the
+of each ayah and the line of each of its words. They were fetched from the
 [Quran.com API](https://api.quran.com) (Quran Foundation) by
 `scripts/fetch-layout.mjs`. Only page and line numbers are kept; no text,
 glyphs or images. The 1405 AH pages are checked to match Tanzil's page data.

@@ -155,6 +155,7 @@ const en = {
       header: 'Surah title',
       basmala: 'Basmala',
       yours: 'Your answer',
+      report: 'Not what your mushaf shows? Report it',
     },
     meaning: {
       ask: 'Recite the ayah with this meaning',
@@ -180,6 +181,7 @@ const en = {
     went: (ref: string) => `and went into ${ref}`,
     saved: 'When you move on, the two are saved to Tell them apart, to practise until you no longer mix them up.',
     close: 'Close',
+    report: 'Wrongly flagged? Report it',
   },
 
   listen: {
@@ -241,6 +243,8 @@ const en = {
     go: 'Go',
     pageNumber: 'Page number',
     translation: 'English translation',
+    view: 'View',
+    views: { printed: 'As printed', flow: 'Flowing', translation: 'Translation' },
     loadingTranslation: 'Loading the translation…',
     translationFailed: 'The translation could not be loaded. Check your connection and try again.',
     retry: 'Try again',
@@ -392,6 +396,8 @@ const en = {
       'Murajaah is free and open source. The Qur’an text is the Tanzil Project’s verified Uthmani text (Hafs), used unchanged. Rub’, juz and page boundaries are checked against the in-text rub’ signs and quran.com. English translations are from Tanzil: Saheeh International (for non-commercial use) and Pickthall (public domain). A translation conveys meaning and is not the Qur’an itself. Where each ayah sits on the page, in the 1405 AH and 1421 AH Madinah prints, is from the Quran.com API.',
     tanzil: 'Tanzil Project',
     source: 'Source code',
+    privacy: 'Privacy',
+    report: 'Report a problem',
     version: (v: string) => `Version ${v}`,
     cancel: 'Cancel',
     delete: 'Delete',
@@ -440,6 +446,70 @@ const en = {
     badEmail: 'Enter a full email address, like name@example.com.',
     badCode: 'That code didn’t work. Check it, or send a new one.',
     error: (msg: string) => `Something went wrong: ${msg}`,
+  },
+
+  reminder: {
+    title: 'Daily reminder',
+    toggle: 'Remind me to revise every day',
+    time: 'Time',
+    hint: 'One notification a day at this time, saying how many questions are due. Nothing is sent on a day with nothing due.',
+    on: (time: string) => `On: every day at ${time}.`,
+    signIn: 'Sign in below to get a daily reminder on this device.',
+    homeScreen:
+      'On iPhone and iPad, reminders need the app on your Home Screen: in Safari tap Share, then Add to Home Screen, and open Murajaah from there.',
+    denied: 'Notifications are blocked for this site. Allow them in the browser’s settings, then try again.',
+    unsupported: 'This browser can’t receive reminders.',
+    failed:
+      'The reminder couldn’t be saved. If this keeps happening, the reminders SQL hasn’t been run yet (section 1.8 of the setup guide).',
+    saving: 'Saving…',
+  },
+
+  privacy: {
+    title: 'Privacy',
+    intro:
+      'Murajaah works without an account, has no ads, no analytics and no tracking. This page says what happens to your data, in plain words.',
+    sections: [
+      {
+        h: 'On your device',
+        p: [
+          'Your answers, settings, whole-surah recitations and recordings are kept in this browser’s storage on this device. They don’t leave it unless you sign in.',
+          'To remove them: Settings → Delete progress on this device, or clear this site’s data in your browser.',
+        ],
+      },
+      {
+        h: 'Reciting aloud',
+        p: [
+          'When you recite aloud, your browser’s own speech recognition turns your voice into words. In Chrome that is Google’s online speech service, so the audio goes to Google under Google’s privacy terms; Safari uses Apple’s. Murajaah only receives the words, to follow along. It doesn’t record or keep the audio.',
+        ],
+      },
+      {
+        h: 'Your recordings',
+        p: [
+          'Audio is recorded only when you choose Record this surah. The recording stays on this device; if you’re signed in, it’s also kept in a private folder of your account that only you can open. You can delete it at any time.',
+        ],
+      },
+      {
+        h: 'With an account (optional)',
+        p: [
+          'Signing in stores your email address, answers, settings, whole-surah recitations, recordings and, if you turn it on, your reminder time, so they stay in step across your devices. They are kept with Supabase, in the database of whoever runs this copy of the app. Each account can only read its own data.',
+          'In Settings you can delete your synced data, or your whole account with everything in it.',
+        ],
+      },
+      {
+        h: 'Daily reminder (optional)',
+        p: [
+          'If you turn on the reminder, your browser gives the app an address its push service (Google’s, Apple’s or Mozilla’s) can deliver to. The app keeps that address, your reminder time and how many questions are due each day, to send one short notification. Turning the reminder off deletes them.',
+        ],
+      },
+      {
+        h: 'Listening to reciters',
+        p: [
+          'Recitations stream from EveryAyah.com. Like any website, their server sees your device’s network address when it sends the audio.',
+        ],
+      },
+    ],
+    contact: 'Questions or a problem? Report it on GitHub.',
+    back: 'Back to settings',
   },
 
   pwa: {
@@ -619,6 +689,7 @@ const ar: Strings = {
       header: 'عنوان السورة',
       basmala: 'البسملة',
       yours: 'إجابتك',
+      report: 'لا يطابق مصحفك؟ أبلغ عن ذلك',
     },
     meaning: {
       ask: 'اتلُ الآية التي هذا معناها',
@@ -644,6 +715,7 @@ const ar: Strings = {
     went: (ref) => `فانتقلت إلى ${ref}`,
     saved: 'عند انتقالك تُحفظ الآيتان في «المتشابهات» لتتدرّب عليهما حتى لا تخلط بينهما.',
     close: 'إغلاق',
+    report: 'نُبّهت خطأً؟ أبلغ عن ذلك',
   },
 
   listen: {
@@ -707,6 +779,8 @@ const ar: Strings = {
     go: 'انتقل',
     pageNumber: 'رقم الصفحة',
     translation: 'الترجمة الإنجليزية',
+    view: 'العرض',
+    views: { printed: 'كما في المصحف', flow: 'متصل', translation: 'مع الترجمة' },
     loadingTranslation: 'جارٍ تحميل الترجمة…',
     translationFailed: 'تعذّر تحميل الترجمة. تحقّق من الاتصال ثم حاول مرة أخرى.',
     retry: 'حاول مرة أخرى',
@@ -859,6 +933,8 @@ const ar: Strings = {
       '«مراجعة» تطبيق مجاني مفتوح المصدر. نص القرآن هو النص العثماني المدقّق من مشروع تنزيل (رواية حفص) دون أي تغيير، وحدود الأرباع والأجزاء والصفحات مطابَقة مع علامات الأرباع في النص ومع quran.com. الترجمات الإنجليزية من تنزيل: صحيح إنترناشيونال (للاستخدام غير التجاري) وبيكثال (ملك عام). والترجمة بيان للمعنى وليست قرآنًا. ومواضع الآيات في الصفحات، في طبعتي ١٤٠٥هـ و١٤٢١هـ من مصحف المدينة، من واجهة Quran.com البرمجية.',
     tanzil: 'مشروع تنزيل',
     source: 'الشيفرة المصدرية',
+    privacy: 'الخصوصية',
+    report: 'أبلغ عن مشكلة',
     version: (v) => `الإصدار ${v}`,
     cancel: 'إلغاء',
     delete: 'احذف',
@@ -909,6 +985,68 @@ const ar: Strings = {
     badEmail: 'اكتب بريدًا إلكترونيًا كاملًا، مثل name@example.com.',
     badCode: 'هذا الرمز غير صحيح. تحقّق منه أو اطلب رمزًا جديدًا.',
     error: (msg) => `حدث خطأ: ${msg}`,
+  },
+
+  reminder: {
+    title: 'التذكير اليومي',
+    toggle: 'ذكّرني بالمراجعة كل يوم',
+    time: 'الوقت',
+    hint: 'إشعار واحد في اليوم في هذا الوقت بعدد الأسئلة المستحقة، ولا يُرسل شيء في يوم لا شيء مستحق فيه.',
+    on: (time) => `مفعّل: كل يوم الساعة ${time}.`,
+    signIn: 'سجّل الدخول أدناه لتصلك تذكرة يومية على هذا الجهاز.',
+    homeScreen:
+      'على آيفون وآيباد يحتاج التذكير إلى إضافة التطبيق إلى الشاشة الرئيسية: في سفاري اضغط مشاركة ثم «إضافة إلى الشاشة الرئيسية»، وافتح «مراجعة» من هناك.',
+    denied: 'الإشعارات محظورة لهذا الموقع. اسمح بها من إعدادات المتصفح ثم حاول مجددًا.',
+    unsupported: 'هذا المتصفح لا يستقبل التذكيرات.',
+    failed:
+      'تعذّر حفظ التذكير. إذا تكرر ذلك فلم يُشغَّل بعد ملف التذكيرات في قاعدة البيانات (القسم ١٫٨ في دليل الإعداد).',
+    saving: 'جارٍ الحفظ…',
+  },
+
+  privacy: {
+    title: 'الخصوصية',
+    intro:
+      '«مراجعة» يعمل دون حساب، ولا إعلانات فيه ولا إحصاءات ولا تتبّع. توضّح هذه الصفحة بكلام واضح ما يحدث لبياناتك.',
+    sections: [
+      {
+        h: 'على جهازك',
+        p: [
+          'إجاباتك وإعداداتك وتلاواتك للسور الكاملة وتسجيلاتك محفوظة في تخزين هذا المتصفح على هذا الجهاز، ولا تغادره إلا إذا سجّلت الدخول.',
+          'لحذفها: الإعدادات ← احذف التقدّم من هذا الجهاز، أو امسح بيانات هذا الموقع من المتصفح.',
+        ],
+      },
+      {
+        h: 'التسميع بالصوت',
+        p: [
+          'عندما تسمّع بصوتك يحوّل متصفحك صوتك إلى كلمات بخدمة التعرّف على الكلام الخاصة به. في كروم هي خدمة Google عبر الإنترنت، فيُرسَل الصوت إلى Google وفق شروطها، وفي سفاري خدمة Apple. لا يصل إلى «مراجعة» إلا الكلمات ليتابع قراءتك، ولا يسجّل الصوت ولا يحتفظ به.',
+        ],
+      },
+      {
+        h: 'تسجيلاتك',
+        p: [
+          'لا يُسجَّل الصوت إلا حين تختار «سجّل هذه السورة». يبقى التسجيل على هذا الجهاز، وإذا كنت مسجّل الدخول يُحفظ أيضًا في مجلد خاص في حسابك لا يفتحه أحد غيرك، ويمكنك حذفه متى شئت.',
+        ],
+      },
+      {
+        h: 'مع حساب (اختياري)',
+        p: [
+          'عند تسجيل الدخول تُحفظ بريدك الإلكتروني وإجاباتك وإعداداتك وتلاواتك وتسجيلاتك، ووقت التذكير إن فعّلته، لتتزامن بين أجهزتك. تُحفظ لدى Supabase في قاعدة بيانات من يدير هذه النسخة من التطبيق، ولا يقرأ كل حساب إلا بياناته.',
+          'ويمكنك من الإعدادات حذف بياناتك المتزامنة، أو حذف حسابك كله بكل ما فيه.',
+        ],
+      },
+      {
+        h: 'التذكير اليومي (اختياري)',
+        p: [
+          'إذا فعّلت التذكير يعطي متصفحك التطبيقَ عنوانًا تُرسَل إليه الإشعارات عبر خدمة الإشعارات الخاصة به (من Google أو Apple أو Mozilla). يحتفظ التطبيق بهذا العنوان ووقت التذكير وعدد الأسئلة المستحقة كل يوم ليرسل إشعارًا قصيرًا واحدًا، وإيقاف التذكير يحذفها.',
+        ],
+      },
+      {
+        h: 'الاستماع إلى القرّاء',
+        p: ['تُبثّ التلاوات من موقع EveryAyah.com، ويرى خادمه عنوان جهازك على الشبكة كما يراه أي موقع حين يرسل الصوت.'],
+      },
+    ],
+    contact: 'لديك سؤال أو مشكلة؟ أبلغ عنها على GitHub.',
+    back: 'العودة إلى الإعدادات',
   },
 
   pwa: {

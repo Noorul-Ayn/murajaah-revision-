@@ -19,9 +19,9 @@ test('a reciter plays ayah by ayah, with the basmala, and turns the page', async
   await page.getByRole('button', { name: 'Listen' }).click()
   await expect(page.getByRole('combobox', { name: 'Reciter' })).toHaveValue('alafasy')
   // Tap the last ayah on the page: playback carries on onto page 604.
-  await page.locator('.ayah-run').last().click()
+  await page.locator('.page [data-index]').last().click()
   await expect(page).toHaveURL(/#\/mushaf\/604$/, { timeout: 15_000 })
-  await expect(page.locator('.ayah-run--active')).toBeVisible()
+  await expect(page.locator('.ml-word--active').first()).toBeVisible()
   // Al-Ikhlas starts with the basmala (Al-Fatiha 1) before 112:1.
   await expect.poll(() => requested.includes('112001.mp3'), { timeout: 15_000 }).toBe(true)
   expect(requested.indexOf('001001.mp3')).toBeLessThan(requested.indexOf('112001.mp3'))
@@ -38,7 +38,7 @@ test('opening a surah that starts partway down a page plays from that surah', as
   await page.getByRole('searchbox').fill('Kahf')
   await page.getByRole('link', { name: /Al-Kahf/ }).click()
   await expect(page).toHaveURL(/#\/mushaf\/293$/)
-  await expect(page.locator('section[aria-label="Al-Kahf"] .surah-title')).toBeInViewport()
+  await expect(page.locator('[data-surah="18"]')).toBeInViewport()
 
   await page.getByRole('button', { name: 'Listen' }).click()
   await page.getByRole('button', { name: 'Play', exact: true }).click()
@@ -59,7 +59,7 @@ test('a surah title and any ayah start playback, without opening the player firs
   await page.getByRole('button', { name: 'Close the player' }).click()
 
   // Tap the first ayah on the page, Al-Isra 105: the player opens and plays it.
-  await page.locator('.ayah-run').first().click()
+  await page.locator('.page [data-index]').first().click()
   await expect(page.getByRole('combobox', { name: 'Reciter' })).toBeVisible()
   await expect.poll(() => requested.includes('017105.mp3'), { timeout: 15_000 }).toBe(true)
 })
@@ -67,7 +67,7 @@ test('a surah title and any ayah start playback, without opening the player firs
 test('the page scrolls up to follow the ayah being recited', async ({ page }) => {
   await page.goto('/#/mushaf/50')
   // With the translation, the page is far taller than the screen.
-  await page.getByRole('switch', { name: 'English translation' }).check()
+  await page.getByRole('radio', { name: 'Translation', exact: true }).check()
   await expect(page.locator('.tr-ayah')).toHaveCount(9)
   await page.locator('.ayah-run').first().click()
   // 3:1 to 3:9 play one after another; the last ones are far down the page.

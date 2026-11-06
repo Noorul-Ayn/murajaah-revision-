@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { useLocation } from 'react-router'
+import { Link, useLocation } from 'react-router'
+import { PRIVACY_PATH, reportUrl } from '../lib/report'
 import { useApp } from '../app/AppContext'
 import { useI18n } from '../i18n/I18n'
 import { EXTRA_AYAHS, PROMPT_WORDS, type Lang, type TextSize, type Theme } from '../lib/settings'
@@ -9,6 +10,7 @@ import { clearProgress, exportBackup, importBackup } from '../storage/db'
 import { Dialog, Segmented, Stepper } from '../components/controls'
 import { useToast } from '../components/Toast'
 import { Account } from './Account'
+import { ReminderSettings } from './ReminderSettings'
 
 const REPO_URL = import.meta.env.VITE_REPO_URL as string | undefined
 
@@ -19,6 +21,7 @@ export function Settings() {
   const toast = useToast()
   const fileRef = useRef<HTMLInputElement>(null)
   const [confirmReset, setConfirmReset] = useState(false)
+  const report = reportUrl('Problem: ', [`Mushaf print: ${settings.mushaf}`, `Language: ${settings.lang}`])
 
   // Links like #/settings#mushaf open at that section.
   const { hash } = useLocation()
@@ -157,6 +160,8 @@ export function Settings() {
         />
       </section>
 
+      <ReminderSettings />
+
       <Account />
 
       <section className="section" aria-labelledby="backup-h">
@@ -188,7 +193,7 @@ export function Settings() {
         </div>
       </section>
 
-      <section className="section" aria-labelledby="about-h">
+      <section className="section" aria-labelledby="about-h" id="about">
         <h2 id="about-h">{t.settings.about}</h2>
         <p className="muted small">{t.settings.aboutBody}</p>
         <p className="row small" style={{ justifyContent: 'flex-start' }}>
@@ -198,6 +203,12 @@ export function Settings() {
           {REPO_URL && (
             <a href={REPO_URL} target="_blank" rel="noreferrer">
               {t.settings.source}
+            </a>
+          )}
+          <Link to={PRIVACY_PATH}>{t.settings.privacy}</Link>
+          {report && (
+            <a href={report} target="_blank" rel="noreferrer">
+              {t.settings.report}
             </a>
           )}
         </p>

@@ -8,6 +8,8 @@ import { setKv } from '../storage/db'
 import { Ayahs } from '../components/QuranText'
 import { Dialog } from '../components/controls'
 import { PlayerBar } from '../components/PlayerBar'
+import { MushafLines } from '../components/MushafLines'
+import { Segmented } from '../components/controls'
 import { HeadphonesIcon, PlayIcon } from '../components/Icons'
 import { usePlayer, type MyRecording } from '../hooks/usePlayer'
 import { MINE, reciterById } from '../lib/reciters'
@@ -151,6 +153,9 @@ function Reader({ page }: { page: number }) {
   const segments = segmentsOf(first, last, (i) => quran.surahOf(i))
   const juz = quran.juzOf(first)
 
+  /** As printed (fifteen lines), flowing text, or flowing text with the translation. */
+  const view = settings.showTranslation ? 'translation' : settings.printedPage ? 'printed' : 'flow'
+
   // Opened at a surah (or juz) that begins partway down the page: listening starts there.
   const requested = (location.state as Partial<ReaderState> | null)?.from
   const from = typeof requested === 'number' && requested >= first && requested <= last ? requested : null
@@ -185,10 +190,13 @@ function Reader({ page }: { page: number }) {
     // After the shell's own scroll to the top of a new screen.
     const id = requestAnimationFrame(() => {
       const el = pageRef.current?.querySelector(`[data-index="${from}"]`)
-      ;(el?.closest('section') ?? el)?.scrollIntoView({ block: 'start' })
+      // The title of the surah it opens, if it does; otherwise the ayah itself.
+      const surah = quran.surahOf(from)
+      const title = surah.start === from ? pageRef.current?.querySelector(`[data-surah="${surah.n}"]`) : null
+      ;(title ?? el?.closest('section') ?? el)?.scrollIntoView({ block: 'start' })
     })
     return () => cancelAnimationFrame(id)
-  }, [from, first])
+  }, [from, first, quran, view])
 
   // Follow the recitation down the page: when the ayah being recited is low
   // on the screen (or out of sight), scroll it up near the top.
@@ -306,16 +314,19 @@ function Reader({ page }: { page: number }) {
             {t.player.listen}
           </button>
         )}
-        <label className="toggle">
-          <input
-            type="checkbox"
-            role="switch"
-            checked={settings.showTranslation}
-            onChange={(e) => updateSettings({ showTranslation: e.target.checked })}
-          />
-          <span>{t.mushaf.translation}</span>
-        </label>
       </div>
+      <Segmented
+        legend={t.mushaf.view}
+        className="reader__views"
+        value={view}
+        options={(['printed', 'flow', 'translation'] as const).map((v) => ({ value: v, label: t.mushaf.views[v] }))}
+        onChange={(v) =>
+          updateSettings({
+            showTranslation: v === 'translation',
+            printedPage: v === 'translation' ? settings.printedPage : v === 'printed',
+          })
+        }
+      />
 
       <article
         ref={pageRef}
@@ -331,36 +342,46 @@ function Reader({ page }: { page: number }) {
           <span>{t.where.juz(num(juz))}</span>
         </header>
 
-        {segments.map((seg) => (
-          <section key={seg.surah.n} aria-label={i18n.surahName(seg.surah)}>
-            {seg.starts && surahHeader(seg.surah)}
-            {seg.starts && seg.surah.basmala && (
-              <p className="quran page__basmala" lang="ar" dir="rtl" translate="no">
-                {seg.surah.basmala}
-              </p>
-            )}
-            {shown.status === 'ready' ? (
-              <ol className="tr-list">
-                {seg.indices.map((i) => {
-                  const ayah = i - seg.surah.start + 1
-                  return (
-                    <li key={i} className={`tr-ayah${player.index === i ? ' tr-ayah--active' : ''}`}>
-                      <Ayahs indices={[i]} className="quran--start" active={player.index} onAyahClick={onAyahTap} />
-                      <p className="translation" lang="en" dir="ltr">
-                        <span className="translation__ref">
-                          {seg.surah.n}:{ayah}
-                        </span>{' '}
-                        {shown.data.ayahs[i]}
-                      </p>
-                    </li>
-                  )
-                })}
-              </ol>
-            ) : (
-              <Ayahs indices={seg.indices} className="quran--page" active={player.index} onAyahClick={onAyahTap} />
-            )}
-          </section>
-        ))}
+        {view === 'printed' && (
+          <MushafLines
+            page={page}
+            active={player.index}
+            onAyahClick={onAyahTap}
+            onPlaySurah={(n) => listenFrom(quran.surah(n).start)}
+          />
+        )}
+
+        {view !== 'printed' &&
+          segments.map((seg) => (
+            <section key={seg.surah.n} aria-label={i18n.surahName(seg.surah)} data-surah={seg.surah.n}>
+              {seg.starts && surahHeader(seg.surah)}
+              {seg.starts && seg.surah.basmala && (
+                <p className="quran page__basmala" lang="ar" dir="rtl" translate="no">
+                  {seg.surah.basmala}
+                </p>
+              )}
+              {shown.status === 'ready' ? (
+                <ol className="tr-list">
+                  {seg.indices.map((i) => {
+                    const ayah = i - seg.surah.start + 1
+                    return (
+                      <li key={i} className={`tr-ayah${player.index === i ? ' tr-ayah--active' : ''}`}>
+                        <Ayahs indices={[i]} className="quran--start" active={player.index} onAyahClick={onAyahTap} />
+                        <p className="translation" lang="en" dir="ltr">
+                          <span className="translation__ref">
+                            {seg.surah.n}:{ayah}
+                          </span>{' '}
+                          {shown.data.ayahs[i]}
+                        </p>
+                      </li>
+                    )
+                  })}
+                </ol>
+              ) : (
+                <Ayahs indices={seg.indices} className="quran--page" active={player.index} onAyahClick={onAyahTap} />
+              )}
+            </section>
+          ))}
 
         {shown.status === 'loading' && (
           <p className="note" role="status">

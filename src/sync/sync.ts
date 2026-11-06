@@ -229,4 +229,6 @@ export async function deleteCloudData(client: SupabaseClient, userId: string): P
   if (b.error) throw b.error
   const c = await client.from('surah_runs').delete().eq('user_id', userId)
   if (c.error && !missingTable(c.error)) throw c.error
+  const d = await client.from('reminders').delete().eq('user_id', userId)
+  if (d.error && !missingTable(d.error)) throw d.error
 }

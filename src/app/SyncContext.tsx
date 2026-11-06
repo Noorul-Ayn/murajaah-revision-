@@ -14,6 +14,14 @@ import {
 import type { Recording } from '../storage/db'
 import { clearProgress, getKv, markAllUnsynced, setKv } from '../storage/db'
 import { useApp } from './AppContext'
+import { dueByDay, remindersSupported } from '../lib/reminders'
+import {
+  disableReminder,
+  enableReminder,
+  getLocalReminder,
+  refreshReminder,
+  type LocalReminder,
+} from '../sync/reminders'
 
 export type SyncStatus =
   | { kind: 'idle' }
@@ -38,6 +46,13 @@ export interface Sync {
   deleteAccount: () => Promise<void>
   /** Recordings kept in the account (signed in only). */
   remoteRecordings: RemoteRecording[]
+  /** Whether a daily reminder can be offered (build set up for it, browser able, signed in). */
+  remindersAvailable: boolean
+  /** This device's daily reminder, if on. */
+  reminder: LocalReminder | null
+  /** Turns the reminder on at a time (minutes after midnight), or changes the time. */
+  setReminder: (minutes: number) => Promise<void>
+  clearReminder: () => Promise<void>
   uploadRecording: (rec: Recording) => Promise<void>
   downloadRecording: (remote: RemoteRecording) => Promise<Recording | null>
   deleteRemoteRecording: (surah: number) => Promise<void>
@@ -63,6 +78,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<SyncStatus>({ kind: 'idle' })
   const [linkError, setLinkError] = useState<string | null>(null)
   const [remoteRecordings, setRemoteRecordings] = useState<RemoteRecording[]>([])
+  const [reminder, setReminderState] = useState<LocalReminder | null>(null)
   const running = useRef<Promise<void> | null>(null)
   const again = useRef(false)
   const appRef = useRef(app)
@@ -74,6 +90,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     if (!supabase) return
     void getKv<number>('lastSync').then((at) => at && setStatus({ kind: 'synced', at }))
     void getRemoteRecordings().then(setRemoteRecordings)
+    void getLocalReminder().then(setReminderState)
     const redirect = readAuthRedirect()
     // getSession waits for a sign-in link's ?code=… to be exchanged first.
     supabase.auth.getSession().then(({ data, error }) => {
@@ -115,6 +132,12 @@ export function SyncProvider({ children }: { children: ReactNode }) {
             console.warn('Recordings did not sync', e)
           }
           if (result.pulledRuns) appRef.current.touchRecitations()
+          try {
+            const { settings, states } = appRef.current
+            await refreshReminder(supabase, settings.lang, dueByDay(states.values(), Date.now()))
+          } catch (e) {
+            console.warn('Reminder did not update', e)
+          }
         } while (again.current)
         const at = Date.now()
         await setKv('lastSync', at)
@@ -175,9 +198,23 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         if (error) throw error
       },
       syncNow: run,
+      remindersAvailable: syncConfigured && remindersSupported(),
+      reminder,
+      setReminder: async (minutes) => {
+        if (!supabase || !userId) return
+        const { settings, states } = appRef.current
+        setReminderState(await enableReminder(supabase, minutes, settings.lang, dueByDay(states.values(), Date.now())))
+      },
+      clearReminder: async () => {
+        await disableReminder(supabase)
+        setReminderState(null)
+      },
       signOut: async (keepLocal) => {
         if (!supabase) return
         await run().catch(() => undefined)
+        // The reminder belongs to the account: stop it on this device.
+        await disableReminder(supabase).catch(() => undefined)
+        setReminderState(null)
         await supabase.auth.signOut()
         await setKv('lastSync', null)
         setStatus({ kind: 'idle' })
@@ -205,6 +242,8 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         if (!supabase || !userId) return
         await deleteAllRemoteRecordings(supabase, userId).catch(() => undefined)
         setRemoteRecordings([])
+        await disableReminder(null).catch(() => undefined)
+        setReminderState(null)
         await deleteCloudData(supabase, userId)
         await setKv('sync', null)
       },
@@ -212,6 +251,8 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         if (!supabase || !userId) return
         await deleteAllRemoteRecordings(supabase, userId).catch(() => undefined)
         setRemoteRecordings([])
+        await disableReminder(null).catch(() => undefined)
+        setReminderState(null)
         const { error } = await supabase.rpc('delete_own_account')
         if (error) throw error
         await supabase.auth.signOut({ scope: 'local' })
@@ -222,7 +263,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         setStatus({ kind: 'idle' })
       },
     }),
-    [session, status, run, userId, linkError, remoteRecordings],
+    [session, status, run, userId, linkError, remoteRecordings, reminder],
   )
 
   return <SyncContext.Provider value={value}>{children}</SyncContext.Provider>

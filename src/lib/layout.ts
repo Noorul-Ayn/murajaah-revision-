@@ -6,6 +6,7 @@
  */
 
 import type { Quran } from './quran'
+import { splitWords } from './text'
 
 /**
  * The King Fahd Complex prints: 1405 AH, and 1421 AH (with later prints that
@@ -22,6 +23,8 @@ interface PrintData {
   first: string
   /** One letter per ayah: the line it ends on. */
   last: string
+  /** Each ayah's words by line: "C4D3" is four words on line 3, then three on line 4. */
+  words: string[]
 }
 
 export interface LayoutData {
@@ -61,6 +64,19 @@ function lineNumber({ page, line }: { page: number; line: number }): number {
 
 export type LineKind = 'text' | 'header' | 'basmala'
 
+/** A word as printed on a line. */
+export interface PrintedWord {
+  /** Global index of its ayah. */
+  ayah: number
+  text: string
+  /** The ayah opens a rub': the ۞ sign goes before this word. */
+  rub: boolean
+  /** The ayah's number, when this is its last word (the end marker follows). */
+  end: number | null
+}
+
+export type PrintedLine = { kind: 'text'; words: PrintedWord[] } | { kind: 'header' | 'basmala'; surah: number }
+
 /** A line on a page, as tapped in the page quiz. */
 export interface Spot {
   page: number
@@ -95,6 +111,44 @@ export class PageLayout {
   /** The line the ayah ends on (same page: no ayah crosses a page in either print). */
   lastLine(index: number): number {
     return this.data.last.charCodeAt(index) - 64
+  }
+
+  /** The line of each of the ayah's words (its display words, as splitWords counts them). */
+  wordLines(index: number): number[] {
+    const out: number[] = []
+    for (const [, letter, count] of (this.data.words[index] ?? '').matchAll(/([A-O])(\d+)/g)) {
+      for (let k = 0; k < Number(count); k++) out.push(letter!.charCodeAt(0) - 64)
+    }
+    return out
+  }
+
+  /**
+   * A page as printed, line by line: the words on each text line (with the
+   * ayah each belongs to), and the surah each title and basmala line opens.
+   */
+  printedLines(page: number): PrintedLine[] {
+    const shape = this.shape(page)
+    const lines: PrintedLine[] = shape.map((kind) => (kind === 'text' ? { kind, words: [] } : { kind, surah: 0 }))
+    const [first, last] = this.quran.pageRange(page)
+    for (let i = first; i <= last; i++) {
+      const { rubSign, words } = splitWords(this.quran.text(i))
+      const at = this.wordLines(i)
+      const ayah = this.quran.keyOf(i).ayah
+      words.forEach((text, k) => {
+        const line = lines[(at[k] ?? this.firstLine(i)) - 1]
+        if (line?.kind !== 'text') return
+        line.words.push({ ayah: i, text, rub: k === 0 && rubSign, end: k === words.length - 1 ? ayah : null })
+      })
+    }
+    // A title or basmala opens the surah of the next ayah: further down this page, or on the next one.
+    const nextPageFirst = page < 604 ? this.quran.pageRange(page + 1)[0] : null
+    lines.forEach((line, k) => {
+      if (line.kind === 'text') return
+      const below = lines.slice(k + 1).find((l) => l.kind === 'text' && l.words.length > 0)
+      const ayah = below?.kind === 'text' ? below.words[0]!.ayah : nextPageFirst
+      if (ayah !== null) line.surah = this.quran.surahOf(ayah).n
+    })
+    return lines
   }
 
   /**

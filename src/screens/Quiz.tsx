@@ -27,6 +27,7 @@ import { Mixups } from '../components/Mixups'
 import { isRightPage, type Spot } from '../lib/layout'
 import { ayahDiff, mixupsIn, sharedOpening, wordIndexFor } from '../lib/similar'
 import { loadTranslation, type Translation } from '../lib/translations'
+import { PRIVACY_PATH, reportUrl } from '../lib/report'
 
 export type QuizRequest = { mode: Mode; scope: Scope; size: number; order: Order } | { mode: Mode; itemIds: ItemId[] }
 
@@ -744,10 +745,29 @@ function QuizSession({ request }: { request: QuizRequest }) {
           : t.quiz.place.wrong(side, line)
     const cls =
       placed.raw === 'perfect' ? 'verdict--right' : placed.raw === 'hesitated' ? 'verdict--near' : 'verdict--wrong'
+    const ref = verseLabel(i18n, quran, question.index)
+    const report =
+      placed.raw === 'perfect'
+        ? null
+        : reportUrl(`Page quiz: ${ref} (${settings.mushaf} print)`, [
+            `Ayah: ${ref}`,
+            `Mushaf print: ${settings.mushaf} AH`,
+            `The app says: page ${page}, line ${layout.firstLine(question.index)}`,
+            'In my mushaf it begins on: page …, line …',
+          ])
     return (
-      <p className={`verdict ${cls}`} role="status">
-        {text}
-      </p>
+      <>
+        <p className={`verdict ${cls}`} role="status">
+          {text}
+        </p>
+        {report && (
+          <p className="note">
+            <a href={report} target="_blank" rel="noreferrer">
+              {t.quiz.place.report}
+            </a>
+          </p>
+        )}
+      </>
     )
   }
 
@@ -990,6 +1010,11 @@ function QuizSession({ request }: { request: QuizRequest }) {
       >
         <p>{t.listen.noticeBody}</p>
         <p className="muted">{t.listen.noticeLimits}</p>
+        <p className="small">
+          <a href={`#${PRIVACY_PATH}`} target="_blank" rel="noreferrer">
+            {t.settings.privacy}
+          </a>
+        </p>
       </Dialog>
     </div>
   )

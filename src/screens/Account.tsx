@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { useSync } from '../app/SyncContext'
+import { Link } from 'react-router'
 import { useI18n } from '../i18n/I18n'
+import { PRIVACY_PATH } from '../lib/report'
 import { Dialog } from '../components/controls'
 import { useToast } from '../components/Toast'
 
@@ -163,7 +165,9 @@ export function Account() {
         </form>
       ) : (
         <form className="panel stack" style={{ gap: '0.9rem' }} onSubmit={(e) => void send(e)} noValidate>
-          <p className="muted small">{t.account.pitch}</p>
+          <p className="muted small">
+            {t.account.pitch} <Link to={PRIVACY_PATH}>{t.settings.privacy}</Link>
+          </p>
           <label className="field">
             <span>{t.account.email}</span>
             <input

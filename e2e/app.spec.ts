@@ -118,7 +118,7 @@ test('the mushaf opens by surah, turns pages and shows a translation', async ({ 
   await page.getByRole('button', { name: 'Previous page' }).click()
   await expect(page).toHaveURL(/#\/mushaf\/293$/)
 
-  await page.getByRole('switch', { name: 'English translation' }).check()
+  await page.getByRole('radio', { name: 'Translation', exact: true }).check()
   await expect(page.getByText('18:1', { exact: true })).toBeVisible()
   // Page 293 opens with the end of Al-Isra, then Al-Kahf begins.
   await expect(page.locator('.translation').first()).toContainText('17:105')
@@ -132,4 +132,40 @@ test('the mushaf opens by surah, turns pages and shows a translation', async ({ 
 
   await page.getByRole('link', { name: 'Surah list' }).click()
   await expect(page.getByRole('link', { name: /Continue reading/ })).toContainText('Page 604')
+})
+
+test('the mushaf shows the page as printed, or as flowing text', async ({ page }) => {
+  await page.goto('/#/mushaf/293')
+  // Fifteen lines: the end of Al-Isra, Al-Kahf's title and basmala, then its first ayahs.
+  const lines = page.locator('.mushaf-lines > *')
+  await expect(lines).toHaveCount(15)
+  await expect(page.locator('.ml-header')).toHaveText('سورة الكهف')
+  await expect(page.locator('.ml-basmala')).toHaveCount(1)
+  // Line 1 begins with Al-Isra 105.
+  await expect(lines.first().locator('[data-index]').first()).toHaveAttribute('data-index', String(2029 + 104))
+
+  await page.getByRole('radio', { name: 'Flowing' }).check()
+  await expect(page.locator('.mushaf-lines')).toHaveCount(0)
+  await expect(page.locator('.ayah-run').first()).toBeVisible()
+  // The choice is remembered.
+  await page.goto('/#/mushaf/294')
+  await expect(page.getByRole('radio', { name: 'Flowing' })).toBeChecked()
+  await page.getByRole('radio', { name: 'As printed' }).check()
+  await expect(page.locator('.mushaf-lines > *')).toHaveCount(15)
+})
+
+test('privacy is explained, and the setup page makes reminder keys in the browser', async ({ page }) => {
+  await page.goto('/#/settings')
+  await page.getByRole('link', { name: 'Privacy' }).click()
+  await expect(page.getByRole('heading', { name: 'Privacy' })).toBeVisible()
+  await expect(page.getByText(/doesn’t record or keep the audio/)).toBeVisible()
+
+  await page.goto('/#/setup/reminders')
+  await page.getByRole('button', { name: 'Make the keys' }).click()
+  const codes = page.locator('.key-row code')
+  await expect(codes).toHaveCount(3)
+  // A P-256 public key is 65 bytes (87 base64url characters), the private key 32 (43).
+  await expect(codes.nth(0)).toHaveText(/^B[\w-]{86}$/)
+  await expect(codes.nth(1)).toHaveText(/^[\w-]{43}$/)
+  await expect(codes.nth(2)).toHaveText(/^[\w-]{43}$/)
 })

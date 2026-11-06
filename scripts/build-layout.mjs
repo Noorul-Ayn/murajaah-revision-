@@ -21,7 +21,39 @@ const AYAHS = 6236
 const PAGES = 604
 const letter = (line) => String.fromCharCode(64 + line)
 
-function build(rows, name) {
+// The app's words: Tanzil's tokens, with pause and sajda signs (U+06D6–U+06ED)
+// attached to the word before them, as in src/lib/text.ts.
+const SIGN_ONLY = /^[\u06D6-\u06ED]+$/u
+const appWords = quran.ayahs.map((text) => {
+  const words = []
+  for (const token of text.split(' ').filter(Boolean)) {
+    if (SIGN_ONLY.test(token)) {
+      if (words.length) words[words.length - 1] += ` ${token}`
+    } else words.push(token)
+  }
+  return words
+})
+
+// Quran.com writes بَعْدَمَا and إِلْيَاسِينَ as one word where Tanzil has two:
+// give both of Tanzil's words the line of Quran.com's one.
+const JOINED = [
+  ['بَعْدَ', 'مَا'],
+  ['إِلْ', 'يَاسِينَ'],
+]
+function wordLines(letters, ayah, name) {
+  const words = appWords[ayah]
+  if (letters.length === words.length) return letters
+  const at = words.findIndex((w, k) => JOINED.some(([a, b]) => w === a && words[k + 1] === b))
+  if (letters.length !== words.length - 1 || at < 0) {
+    throw new Error(`${name}: ayah ${ayah} has ${letters.length} words in the layout and ${words.length} in Tanzil`)
+  }
+  return letters.slice(0, at + 1) + letters[at] + letters.slice(at + 1)
+}
+
+/** "CCCCDDD" → "C4D3": the run of words on each line. */
+const runs = (letters) => letters.replace(/(.)\1*/g, (m, c) => `${c}${m.length}`)
+
+function build(rows, wordLetters, name) {
   if (rows.length !== AYAHS) throw new Error(`${name}: ${rows.length} ayahs`)
   const pages = []
   let first = ''
@@ -37,10 +69,15 @@ function build(rows, name) {
     last += letter(endLine)
   })
   if (pages.length !== PAGES) throw new Error(`${name}: ${pages.length} pages`)
-  return { pages, first, last }
+  const words = wordLetters.map((l, i) => {
+    const letters = wordLines(l, i, name)
+    if (letters[0] !== first[i] || letters.at(-1) !== last[i]) throw new Error(`${name}: ayah ${i} word lines disagree`)
+    return runs(letters)
+  })
+  return { pages, first, last, words }
 }
 
-const prints = { 1405: build(raw.v1, '1405'), 1421: build(raw.v2, '1421') }
+const prints = { 1405: build(raw.v1, raw.words.v1, '1405'), 1421: build(raw.v2, raw.words.v2, '1421') }
 
 const tanzil = quran.pages
 const mismatch = prints[1405].pages.findIndex((start, p) => start !== tanzil[p])
@@ -49,7 +86,7 @@ if (mismatch >= 0) throw new Error(`1405 print: page ${mismatch + 1} differs fro
 const out = {
   source: raw.source,
   fetched: raw.fetched,
-  note: '1405: King Fahd Complex Madinah mushaf, 1405H print. 1421: the 1421H print and later. Lines: A = 1 … O = 15.',
+  note: '1405: King Fahd Complex Madinah mushaf, 1405H print. 1421: the 1421H print and later. Lines: A = 1 … O = 15. words: each ayah’s words by line, e.g. C4D3 = four words on line 3, then three on line 4.',
   prints,
 }
 await writeFile(path.join(root, 'src/data/layout.json'), JSON.stringify(out) + '\n')

@@ -8,6 +8,7 @@ import { buildExpected, follow, words as heardWords, type Expected } from '../li
 import { mixupsIn, wordIndexFor } from '../lib/similar'
 import { pairItem } from '../lib/items'
 import { Mixups } from '../components/Mixups'
+import { PRIVACY_PATH } from '../lib/report'
 import { cleanDays, cleanToday, RUNS_TO_UNLOCK, canRecord } from '../lib/runs'
 import { loadSimpleText } from '../lib/simple'
 import { primeAudio, warn } from '../lib/sound'
@@ -482,6 +483,11 @@ function ReciteSurahScreen({ surahNo }: { surahNo: number }) {
       >
         <p>{t.listen.noticeBody}</p>
         <p className="muted">{t.listen.noticeLimits}</p>
+        <p className="small">
+          <a href={`#${PRIVACY_PATH}`} target="_blank" rel="noreferrer">
+            {t.settings.privacy}
+          </a>
+        </p>
       </Dialog>
 
       <Dialog

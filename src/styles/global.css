@@ -2316,3 +2316,172 @@ button.spread__line:disabled {
 .compare .quran {
   font-size: calc(var(--quran-size) * 0.85);
 }
+
+/* ---------- Privacy ---------- */
+
+.prose p {
+  line-height: 1.65;
+}
+
+.prose .section h2 {
+  font-size: var(--step-0);
+}
+
+/* ---------- The page as printed ---------- */
+
+.mushaf-lines {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-quran);
+  line-height: 1.95;
+  color: var(--ink);
+  direction: rtl;
+  margin: 0.25rem 0 0.5rem;
+}
+
+.ml-text {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  white-space: nowrap;
+  min-height: 1.95em;
+}
+
+/* A line much shorter than the rest (the opening pages, a surah's last line) sits in the middle. */
+.ml-text--short,
+.mushaf-lines--opening .ml-text {
+  justify-content: center;
+  gap: 0.28em;
+}
+
+/* While measuring: each line at its natural width. */
+.mushaf-lines--measure .ml-text {
+  width: max-content;
+  justify-content: flex-start;
+  gap: 0.28em;
+}
+
+.ml-word {
+  border-radius: 0.25em;
+  cursor: pointer;
+}
+
+.ml-word--active {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  box-shadow: 0 0 0 0.12em color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+@media (hover: hover) {
+  .ml-word:hover:not(.ml-word--active) {
+    background: color-mix(in srgb, var(--accent) 7%, transparent);
+  }
+}
+
+.ml-end .ayah-end {
+  font-size: 0.95em;
+}
+
+.ml-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.95em;
+  margin: 0.1em 0;
+  border: 1px solid color-mix(in srgb, var(--clay-edge) 60%, transparent);
+  border-radius: 999px;
+  background: var(--clay);
+  box-shadow:
+    inset 0 0 0 2px var(--surface),
+    inset 0 0 0 3px color-mix(in srgb, var(--clay-edge) 35%, transparent);
+  font-size: 0.9em;
+}
+
+.ml-header {
+  position: relative;
+}
+
+/* Plays the surah; sized to the line so the page keeps its fifteen lines. */
+.ml-play {
+  position: absolute;
+  inset-inline-end: 0.35em;
+  top: 50%;
+  translate: 0 -50%;
+  display: grid;
+  place-items: center;
+  width: max(1.6em, 30px);
+  height: max(1.6em, 30px);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.ml-play svg {
+  width: 55%;
+  height: 55%;
+}
+
+.ml-play:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.ml-basmala {
+  min-height: 1.95em;
+  text-align: center;
+  color: var(--ink-2);
+}
+
+/* The reader's view choice: a compact row under the bar, legend for screen readers only. */
+.reader__views {
+  margin: -0.25rem 0 0.75rem;
+}
+
+.reader__views legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.reader__views span {
+  min-height: 38px;
+  padding: 0.2rem 0.85rem;
+  font-size: var(--step--1);
+}
+
+.field--inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.input--time {
+  width: auto;
+  min-width: 8rem;
+}
+
+/* Setup: reminder keys. */
+.key-row {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.key-row__value {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.key-row code {
+  flex: 1;
+  min-width: 0;
+  padding: 0.5rem 0.65rem;
+  border-radius: 10px;
+  background: var(--clay);
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
