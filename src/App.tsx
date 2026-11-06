@@ -19,7 +19,7 @@ function Wordmark() {
   const { t } = useI18n()
   return (
     <span className="wordmark">
-      <span className="wordmark__ar" lang="ar">
+      <span className="wordmark__ar" lang="ar" translate="no">
         مراجعة
       </span>
       {t.dir === 'ltr' && <span className="wordmark__en">{t.appName}</span>}

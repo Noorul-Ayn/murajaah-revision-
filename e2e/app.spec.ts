@@ -59,6 +59,13 @@ test('naming a rub’ is checked automatically', async ({ page }) => {
   await expect(page.getByText(/^2 of/)).toBeVisible()
 })
 
+test('browsers are told never to translate the page or the Qur’an text', async ({ page }) => {
+  await page.goto('/#/settings')
+  await expect(page.locator('html')).toHaveAttribute('translate', 'no')
+  await expect(page.locator('meta[name="google"]')).toHaveAttribute('content', 'notranslate')
+  await expect(page.locator('.quran').first()).toHaveAttribute('translate', 'no')
+})
+
 test('Arabic switches the whole interface to right-to-left', async ({ page }) => {
   await page.goto('/#/settings')
   await page.getByRole('radio', { name: 'العربية' }).check()

@@ -148,7 +148,7 @@ export function Progress() {
     return (
       <>
         <p className="muted">{t.where.ayahRange(verseLabel(i18n, quran, first), verseLabel(i18n, quran, last))}</p>
-        <p className="quran" lang="ar" dir="rtl">
+        <p className="quran" lang="ar" dir="rtl" translate="no">
           {openingText(quran.text(first), 8)}
         </p>
         <p>

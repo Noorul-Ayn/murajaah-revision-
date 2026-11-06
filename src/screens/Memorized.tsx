@@ -189,7 +189,7 @@ export function Memorized() {
                       >
                         <span className="surah-row__n">{num(s.n)}</span>
                         <span>
-                          <span className="surah-row__name" lang="ar">
+                          <span className="surah-row__name" lang="ar" translate="no">
                             {s.name}
                           </span>
                           <br />

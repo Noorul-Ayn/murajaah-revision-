@@ -30,7 +30,7 @@ export function Ayahs({ indices, alreadyShown = 0, animate = false, basmala = fa
     split.slice(0, k).reduce((n, s, j) => n + s.words.length - (j === 0 ? alreadyShown : 0), 0),
   )
   return (
-    <p className={`quran ${className ?? ''}`} lang="ar" dir="rtl">
+    <p className={`quran ${className ?? ''}`} lang="ar" dir="rtl" translate="no">
       {indices.map((index, k) => {
         const { ayah } = quran.keyOf(index)
         const surah = quran.surahOf(index)
@@ -66,7 +66,7 @@ export function PromptWords({ index, shown }: { index: number; shown: number }) 
   const visible = words.slice(0, shown)
   const hidden = Math.min(words.length - visible.length, 6)
   return (
-    <p className="quran" lang="ar" dir="rtl">
+    <p className="quran" lang="ar" dir="rtl" translate="no">
       {visible.map((w, i) => (
         <Fragment key={i}>
           <span className="word">{w}</span>{' '}

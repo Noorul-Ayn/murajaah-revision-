@@ -67,7 +67,7 @@ export function Settings() {
           onChange={(textSize) => updateSettings({ textSize })}
         />
         <div className="lawh" style={{ paddingBlock: '2rem 1rem' }}>
-          <p className="quran" lang="ar" dir="rtl">
+          <p className="quran" lang="ar" dir="rtl" translate="no">
             {quran.text(quran.indexOf(67, 1))}
           </p>
         </div>

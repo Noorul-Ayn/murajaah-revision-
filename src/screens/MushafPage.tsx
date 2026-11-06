@@ -126,7 +126,7 @@ function Reader({ page }: { page: number }) {
 
   const surahHeader = (s: Surah) => (
     <div className="surah-title">
-      <span className="surah-title__name" lang="ar">
+      <span className="surah-title__name" lang="ar" translate="no">
         سورة {s.name}
       </span>
       {i18n.lang === 'en' && <span className="surah-title__en">{s.tname}</span>}
@@ -162,7 +162,7 @@ function Reader({ page }: { page: number }) {
           <section key={seg.surah.n} aria-label={i18n.surahName(seg.surah)}>
             {seg.starts && surahHeader(seg.surah)}
             {seg.starts && seg.surah.basmala && (
-              <p className="quran page__basmala" lang="ar" dir="rtl">
+              <p className="quran page__basmala" lang="ar" dir="rtl" translate="no">
                 {seg.surah.basmala}
               </p>
             )}
@@ -204,7 +204,7 @@ function Reader({ page }: { page: number }) {
         )}
         {shown.status === 'ready' && <p className="translation__credit">{translationName}</p>}
 
-        <footer className="page__foot" lang="ar">
+        <footer className="page__foot" lang="ar" translate="no">
           {arabicDigits.format(page)}
         </footer>
       </article>

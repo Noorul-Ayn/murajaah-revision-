@@ -77,7 +77,7 @@ export function MushafIndex() {
                     <Link to={`/mushaf/${page}`} className="surah-row">
                       <span className="surah-row__n">{num(s.n)}</span>
                       <span>
-                        <span className="surah-row__name" lang="ar">
+                        <span className="surah-row__name" lang="ar" translate="no">
                           {s.name}
                         </span>
                         <br />
@@ -106,7 +106,7 @@ export function MushafIndex() {
                 <Link to={`/mushaf/${page}`} className="surah-row">
                   <span className="surah-row__n">{num(j + 1)}</span>
                   <span>
-                    <span className="surah-row__name" lang="ar">
+                    <span className="surah-row__name" lang="ar" translate="no">
                       {openingText(quran.text(first), 4)}
                     </span>
                     <br />

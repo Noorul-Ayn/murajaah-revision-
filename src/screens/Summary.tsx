@@ -79,7 +79,7 @@ export function Summary({ results }: { results: Result[] }) {
               const { label, index } = describe(id)
               return (
                 <li key={id}>
-                  <span className="quran" lang="ar" dir="rtl">
+                  <span className="quran" lang="ar" dir="rtl" translate="no">
                     {openingText(quran.text(index), 5)}
                   </span>
                   <span className="muted small">{label}</span>
