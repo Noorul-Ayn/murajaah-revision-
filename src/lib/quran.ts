@@ -52,6 +52,7 @@ export const QUARTER_COUNT = 240
 export const HIZB_COUNT = 60
 export const JUZ_COUNT = 30
 export const SURAH_COUNT = 114
+export const PAGE_COUNT = 604
 
 /** Index of the last element in `starts` that is <= value. `starts` is sorted ascending. */
 function floorIndex(starts: readonly number[], value: number): number {
@@ -153,6 +154,14 @@ export class Quran {
   surahRange(n: number): [number, number] {
     const s = this.surah(n)
     return [s.start, s.start + s.ayahs - 1]
+  }
+
+  /** Inclusive [first, last] ayah indices on Madani page p (1–604). */
+  pageRange(p: number): [number, number] {
+    const first = this.data.pages[p - 1]
+    if (first === undefined) throw new RangeError(`page ${p} out of range`)
+    const last = p === PAGE_COUNT ? AYAH_COUNT - 1 : this.data.pages[p]! - 1
+    return [first, last]
   }
 
   isSajda(index: number): boolean {

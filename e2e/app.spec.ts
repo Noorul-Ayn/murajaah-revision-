@@ -80,3 +80,31 @@ test('works offline once loaded', async ({ page, context, browserName }) => {
   await expect(page.locator('.lawh .quran').first()).toBeVisible()
   await context.setOffline(false)
 })
+
+test('the mushaf opens by surah, turns pages and shows a translation', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('link', { name: 'Mushaf' }).click()
+  await page.getByRole('link', { name: /Al-Kahf/ }).click()
+  await expect(page).toHaveURL(/#\/mushaf\/293$/)
+  await expect(page.getByRole('heading', { name: 'Al-Kahf' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Next page' }).click()
+  await expect(page).toHaveURL(/#\/mushaf\/294$/)
+  await page.getByRole('button', { name: 'Previous page' }).click()
+  await expect(page).toHaveURL(/#\/mushaf\/293$/)
+
+  await page.getByRole('switch', { name: 'English translation' }).check()
+  await expect(page.getByText('18:1', { exact: true })).toBeVisible()
+  // Page 293 opens with the end of Al-Isra, then Al-Kahf begins.
+  await expect(page.locator('.translation').first()).toContainText('17:105')
+  await expect(page.locator('.translation', { hasText: '18:1 ' })).toContainText('[All] praise is [due] to Allah')
+
+  await page.getByRole('button', { name: 'Go to page' }).click()
+  await page.getByLabel('Page number').fill('604')
+  await page.getByRole('button', { name: 'Go', exact: true }).click()
+  await expect(page).toHaveURL(/#\/mushaf\/604$/)
+  await expect(page.getByRole('heading', { name: /An-Naas/ })).toBeVisible()
+
+  await page.getByRole('link', { name: 'Surah list' }).click()
+  await expect(page.getByRole('link', { name: /Continue reading/ })).toContainText('Page 604')
+})

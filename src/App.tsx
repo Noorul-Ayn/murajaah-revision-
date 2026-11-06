@@ -5,13 +5,15 @@ import { AppProvider } from './app/AppContext'
 import { SyncProvider } from './app/SyncContext'
 import { FocusContext } from './app/focus'
 import { useI18n } from './i18n/I18n'
-import { GridIcon, LawhIcon, SlidersIcon } from './components/Icons'
+import { BookIcon, GridIcon, LawhIcon, SlidersIcon } from './components/Icons'
 import { ToastProvider, useToast } from './components/Toast'
 import { Practice } from './screens/Practice'
 import { Quiz } from './screens/Quiz'
 import { Progress } from './screens/Progress'
 import { Settings } from './screens/Settings'
 import { Memorized } from './screens/Memorized'
+import { MushafIndex } from './screens/MushafIndex'
+import { MushafPage } from './screens/MushafPage'
 
 function Wordmark() {
   const { t } = useI18n()
@@ -98,6 +100,10 @@ function Shell() {
               <LawhIcon />
               {t.nav.practice}
             </NavLink>
+            <NavLink to="/mushaf">
+              <BookIcon />
+              {t.nav.mushaf}
+            </NavLink>
             <NavLink to="/progress">
               <GridIcon />
               {t.nav.progress}
@@ -117,6 +123,8 @@ function Shell() {
             <Route path="/progress" element={<Progress />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/memorized" element={<Memorized />} />
+            <Route path="/mushaf" element={<MushafIndex />} />
+            <Route path="/mushaf/:page" element={<MushafPage />} />
             <Route path="*" element={<Practice />} />
           </Routes>
         </FocusContext.Provider>

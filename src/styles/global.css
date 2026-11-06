@@ -193,7 +193,7 @@ select {
   bottom: 0;
   z-index: 10;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   height: calc(var(--nav-h) + env(safe-area-inset-bottom));
   padding-bottom: env(safe-area-inset-bottom);
   background: var(--surface);
@@ -1064,6 +1064,225 @@ select {
   display: grid;
   grid-template-columns: 1fr 6rem;
   gap: 0.5rem;
+}
+
+/* ---------- Mushaf reader ---------- */
+
+.continue {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.continue__label {
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.continue__where {
+  color: var(--ink-2);
+  font-size: var(--step--1);
+}
+
+.surahs--index {
+  max-height: none;
+  overflow: visible;
+}
+
+a.surah-row {
+  color: inherit;
+  text-decoration: none;
+}
+
+.reader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.reader__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.reader__bar .btn--quiet {
+  padding-inline: 0;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.toggle input {
+  appearance: none;
+  position: relative;
+  width: 44px;
+  height: 26px;
+  margin: 0;
+  border-radius: 999px;
+  background: var(--line);
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.toggle input::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  inset-inline-start: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.2);
+  transition: inset-inline-start 150ms ease;
+}
+
+.toggle input:checked {
+  background: var(--accent);
+}
+
+.toggle input:checked::after {
+  inset-inline-start: 21px;
+}
+
+/* A mushaf page: a framed sheet, double-ruled like a printed mushaf. */
+.page {
+  position: relative;
+  padding: 1rem 1rem 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  outline: 3px double color-mix(in srgb, var(--clay-edge) 55%, transparent);
+  outline-offset: -9px;
+  touch-action: pan-y;
+}
+
+.page__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.4rem 0.6rem 0.6rem;
+  color: var(--ink-2);
+  font-size: var(--step--1);
+}
+
+.page__head h1 {
+  font-size: var(--step--1);
+  font-weight: 500;
+  outline: none;
+}
+
+.surah-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0.75rem 0.25rem 0.25rem;
+  padding: 0.35rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--clay-edge) 60%, transparent);
+  border-radius: 999px;
+  background: var(--clay);
+  box-shadow:
+    inset 0 0 0 3px var(--surface),
+    inset 0 0 0 4px color-mix(in srgb, var(--clay-edge) 35%, transparent);
+}
+
+.surah-title__name {
+  font-family: var(--font-quran);
+  font-size: calc(var(--quran-size) * 0.8);
+  line-height: 1.7;
+}
+
+.surah-title__en {
+  font-size: var(--step--1);
+  line-height: 1.3;
+  color: var(--ink-2);
+  margin-top: -0.15rem;
+  padding-bottom: 0.25rem;
+}
+
+.page__basmala {
+  font-size: calc(var(--quran-size) * 0.85);
+  margin-top: 0.25rem;
+}
+
+.quran--page {
+  font-size: calc(var(--quran-size) * 0.86);
+  text-align: justify;
+  text-align-last: center;
+  padding-inline: 0.4rem;
+}
+
+.page__foot {
+  text-align: center;
+  padding-top: 0.5rem;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.tr-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 0.4rem;
+}
+
+.tr-ayah {
+  padding: 0.6rem 0 0.9rem;
+}
+
+.tr-ayah + .tr-ayah {
+  border-top: 1px solid var(--line);
+}
+
+.tr-ayah .quran {
+  line-height: 1.95;
+}
+
+.translation {
+  font-size: 1.02rem;
+  line-height: 1.65;
+  color: var(--ink-2);
+  text-align: left;
+  max-width: 38rem;
+}
+
+.translation__ref {
+  font-size: var(--step--1);
+  font-weight: 600;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.translation__credit {
+  text-align: center;
+  color: var(--ink-3);
+  font-size: var(--step--1);
+  padding-top: 0.5rem;
+}
+
+.reader__turn {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.reader__turn .btn--quiet {
+  font-size: var(--step--1);
+  color: var(--ink-2);
 }
 
 /* ---------- Dialog and toast ---------- */

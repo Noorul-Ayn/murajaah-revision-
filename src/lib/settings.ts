@@ -1,6 +1,7 @@
 import { MODES, type Mode } from './items'
 import { ORDERS, type Order } from './session'
 import { isScopePart, type Scope } from './scope'
+import { TRANSLATIONS, type TranslationId } from './translations'
 
 export type Lang = 'ar' | 'en'
 export type Theme = 'system' | 'light' | 'dark'
@@ -19,6 +20,10 @@ export interface Settings {
   sessionSize: number
   order: Order
   mode: Mode
+  /** Which English translation the mushaf reader shows. */
+  translation: TranslationId
+  /** Whether the mushaf reader shows the translation under each ayah. */
+  showTranslation: boolean
   /** ms since epoch; the newer copy wins when syncing. */
   updatedAt: number
 }
@@ -38,6 +43,8 @@ export function defaultSettings(browserLang = 'en'): Settings {
     sessionSize: 20,
     order: 'smart',
     mode: 'ayah',
+    translation: 'en-sahih',
+    showTranslation: false,
     updatedAt: 0,
   }
 }
@@ -61,6 +68,12 @@ export function sanitizeSettings(value: unknown, base: Settings = defaultSetting
     sessionSize: clampInt(v.sessionSize, 5, 100, base.sessionSize),
     order: oneOf(v.order, ORDERS, base.order),
     mode: oneOf(v.mode, MODES, base.mode),
+    translation: oneOf(
+      v.translation,
+      TRANSLATIONS.map((t) => t.id),
+      base.translation,
+    ),
+    showTranslation: typeof v.showTranslation === 'boolean' ? v.showTranslation : base.showTranslation,
     updatedAt: clampInt(v.updatedAt, 0, Number.MAX_SAFE_INTEGER, base.updatedAt),
   }
 }

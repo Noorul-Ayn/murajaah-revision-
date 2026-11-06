@@ -22,6 +22,22 @@ links Tanzil in the app under Settings → About. Before changing anything in
 The quarter, juz and page boundaries come from Tanzil's metadata (CC BY), with
 one correction documented in the README and recorded in the data file.
 
+## English translations
+
+`data/tanzil/trans/` and `src/data/translations/` contain two English
+translations, downloaded from [tanzil.net/trans](https://tanzil.net/trans/)
+and copied unchanged:
+
+- **Saheeh International** (`en-sahih`), © Saheeh International. Tanzil's
+  terms: "The translations provided at this page are for non-commercial
+  purposes only. If used otherwise, you need to obtain necessary permission
+  from the translator or the publisher." Murajaah is free and non-commercial.
+  **The MIT licence does not extend to this translation.** A commercial fork
+  must remove it or obtain permission from the publisher.
+- **Pickthall** (`en-pickthall`), *The Meaning of the Glorious Koran* by
+  Mohammed Marmaduke William Pickthall (1930). The translator died in 1936;
+  the translation is in the public domain.
+
 ## Boundary cross-check: quran.com
 
 `tests/fixtures/qurancom-boundaries.json` lists juz, rub' al-hizb and page

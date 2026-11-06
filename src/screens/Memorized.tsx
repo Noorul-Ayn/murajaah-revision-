@@ -6,20 +6,9 @@ import { partLabel } from '../i18n/labels'
 import { HIZB_COUNT, JUZ_COUNT, QUARTER_COUNT } from '../lib/quran'
 import { countAyahs, partRange, samePart, scopeMask, togglePart, type ScopePart } from '../lib/scope'
 import { Segmented } from '../components/controls'
+import { foldSearch as fold } from '../lib/search'
 
 type Tab = 'juz' | 'hizb' | 'surah' | 'range'
-
-/** Arabic search that ignores diacritics and the forms of alif. */
-function fold(s: string): string {
-  return s
-    .normalize('NFKD')
-    .replace(/[ً-ٰٟۖ-ۭـ]/g, '')
-    .replace(/[أإآٱ]/g, 'ا')
-    .replace(/ى/g, 'ي')
-    .replace(/ة/g, 'ه')
-    .toLowerCase()
-    .replace(/[^a-z0-9؀-ۿ]/g, '')
-}
 
 export function Memorized() {
   const { quran, settings, updateSettings } = useApp()

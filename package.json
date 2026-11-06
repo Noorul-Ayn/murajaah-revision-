@@ -16,7 +16,7 @@
     "test:e2e": "playwright test",
     "check": "npm run typecheck && npm run lint && npm run format:check && npm test",
     "data:fetch": "node scripts/fetch-tanzil.mjs",
-    "data:build": "node scripts/build-data.mjs",
+    "data:build": "node scripts/build-data.mjs && node scripts/build-translations.mjs",
     "data:check": "node scripts/crosscheck-qurancom.mjs"
   },
   "dependencies": {

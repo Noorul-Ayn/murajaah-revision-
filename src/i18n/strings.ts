@@ -35,7 +35,7 @@ const en = {
   loading: 'Loading the mushaf…',
   loadFailed: 'The Qur’an text could not be loaded. Check your connection and reload.',
   reload: 'Reload',
-  nav: { practice: 'Practice', progress: 'Progress', settings: 'Settings' },
+  nav: { practice: 'Practice', mushaf: 'Mushaf', progress: 'Progress', settings: 'Settings' },
 
   memorized: {
     title: 'What you’ve memorized',
@@ -113,6 +113,31 @@ const en = {
   quarter: (hizb: string, part: 1 | 2 | 3 | 4) =>
     ({ 1: `Hizb ${hizb}`, 2: `¼ Hizb ${hizb}`, 3: `½ Hizb ${hizb}`, 4: `¾ Hizb ${hizb}` })[part],
 
+  mushaf: {
+    title: 'The mushaf',
+    continue: 'Continue reading',
+    continueAt: (page: string, surah: string) => `Page ${page}, ${surah}`,
+    surahs: 'Surahs',
+    juz: 'Juz',
+    search: 'Search surahs',
+    noMatch: 'No surah matches that search.',
+    meccan: 'Meccan',
+    medinan: 'Medinan',
+    page: (n: string) => `Page ${n}`,
+    pageOf: (n: string, total: string) => `Page ${n} of ${total}`,
+    next: 'Next page',
+    previous: 'Previous page',
+    index: 'Surah list',
+    goTo: 'Go to page',
+    go: 'Go',
+    pageNumber: 'Page number',
+    translation: 'English translation',
+    loadingTranslation: 'Loading the translation…',
+    translationFailed: 'The translation could not be loaded. Check your connection and try again.',
+    retry: 'Try again',
+    swipe: 'Swipe or use the arrow keys to turn pages.',
+  },
+
   summary: {
     title: 'Session complete',
     counts: (perfect: string, hesitated: string, missed: string) =>
@@ -154,6 +179,8 @@ const en = {
     themes: { system: 'Match device', light: 'Light', dark: 'Dark' } satisfies Record<Theme, string>,
     textSize: 'Qur’an text size',
     textSizes: { m: 'Medium', l: 'Large', xl: 'Extra large' } satisfies Record<TextSize, string>,
+    reading: 'Reading the mushaf',
+    translationChoice: 'English translation',
     ayahMode: 'Continue the ayah',
     promptWords: 'Words shown at the start',
     extraAyahs: 'Ayahs to keep reciting after it',
@@ -172,7 +199,7 @@ const en = {
     resetDone: 'Progress on this device was deleted.',
     about: 'About',
     aboutBody:
-      'Murajaah is free and open source. The Qur’an text is the Tanzil Project’s verified Uthmani text (Hafs), used unchanged. Rub’, juz and page boundaries are checked against the in-text rub’ signs and quran.com.',
+      'Murajaah is free and open source. The Qur’an text is the Tanzil Project’s verified Uthmani text (Hafs), used unchanged. Rub’, juz and page boundaries are checked against the in-text rub’ signs and quran.com. English translations are from Tanzil: Saheeh International (for non-commercial use) and Pickthall (public domain). A translation conveys meaning and is not the Qur’an itself.',
     tanzil: 'Tanzil Project',
     source: 'Source code',
     version: (v: string) => `Version ${v}`,
@@ -235,7 +262,7 @@ const ar: Strings = {
   loading: 'جارٍ تحميل المصحف…',
   loadFailed: 'تعذّر تحميل نص القرآن. تحقّق من الاتصال ثم أعد التحميل.',
   reload: 'أعد التحميل',
-  nav: { practice: 'التسميع', progress: 'التقدّم', settings: 'الإعدادات' },
+  nav: { practice: 'التسميع', mushaf: 'المصحف', progress: 'التقدّم', settings: 'الإعدادات' },
 
   memorized: {
     title: 'محفوظك',
@@ -343,6 +370,31 @@ const ar: Strings = {
   quarter: (hizb, part) =>
     ({ 1: `الحزب ${hizb}`, 2: `ربع الحزب ${hizb}`, 3: `نصف الحزب ${hizb}`, 4: `ثلاثة أرباع الحزب ${hizb}` })[part],
 
+  mushaf: {
+    title: 'المصحف',
+    continue: 'تابع القراءة',
+    continueAt: (page, surah) => `صفحة ${page}، ${surah}`,
+    surahs: 'السور',
+    juz: 'الأجزاء',
+    search: 'ابحث عن سورة',
+    noMatch: 'لا توجد سورة بهذا الاسم.',
+    meccan: 'مكية',
+    medinan: 'مدنية',
+    page: (n) => `صفحة ${n}`,
+    pageOf: (n, total) => `صفحة ${n} من ${total}`,
+    next: 'الصفحة التالية',
+    previous: 'الصفحة السابقة',
+    index: 'فهرس السور',
+    goTo: 'انتقل إلى صفحة',
+    go: 'انتقل',
+    pageNumber: 'رقم الصفحة',
+    translation: 'الترجمة الإنجليزية',
+    loadingTranslation: 'جارٍ تحميل الترجمة…',
+    translationFailed: 'تعذّر تحميل الترجمة. تحقّق من الاتصال ثم حاول مرة أخرى.',
+    retry: 'حاول مرة أخرى',
+    swipe: 'اسحب أو استخدم مفاتيح الأسهم لتقليب الصفحات.',
+  },
+
   summary: {
     title: 'انتهى التسميع',
     counts: (perfect, hesitated, missed) => `أتقنت ${perfect}، وتردّدت في ${hesitated}، وأخطأت في ${missed}`,
@@ -383,6 +435,8 @@ const ar: Strings = {
     themes: { system: 'حسب الجهاز', light: 'فاتح', dark: 'داكن' },
     textSize: 'حجم خط المصحف',
     textSizes: { m: 'متوسط', l: 'كبير', xl: 'كبير جدًا' },
+    reading: 'قراءة المصحف',
+    translationChoice: 'الترجمة الإنجليزية',
     ayahMode: 'أكمل الآية',
     promptWords: 'عدد الكلمات الظاهرة من أول الآية',
     extraAyahs: 'عدد الآيات التي تكملها بعدها',
@@ -406,7 +460,7 @@ const ar: Strings = {
     resetDone: 'حُذف التقدّم من هذا الجهاز.',
     about: 'عن التطبيق',
     aboutBody:
-      '«مراجعة» تطبيق مجاني مفتوح المصدر. نص القرآن هو النص العثماني المدقّق من مشروع تنزيل (رواية حفص) دون أي تغيير، وحدود الأرباع والأجزاء والصفحات مطابَقة مع علامات الأرباع في النص ومع quran.com.',
+      '«مراجعة» تطبيق مجاني مفتوح المصدر. نص القرآن هو النص العثماني المدقّق من مشروع تنزيل (رواية حفص) دون أي تغيير، وحدود الأرباع والأجزاء والصفحات مطابَقة مع علامات الأرباع في النص ومع quran.com. الترجمات الإنجليزية من تنزيل: صحيح إنترناشيونال (للاستخدام غير التجاري) وبيكثال (ملك عام). والترجمة بيان للمعنى وليست قرآنًا.',
     tanzil: 'مشروع تنزيل',
     source: 'الشيفرة المصدرية',
     version: (v) => `الإصدار ${v}`,

@@ -19,6 +19,16 @@ export function LawhIcon() {
   )
 }
 
+/** An open mushaf. */
+export function BookIcon() {
+  return (
+    <svg {...base}>
+      <path d="M12 6.5C10 5 7.2 4.5 3.5 4.8v13.4c3.7-.3 6.5.2 8.5 1.8 2-1.6 4.8-2.1 8.5-1.8V4.8C16.8 4.5 14 5 12 6.5z" />
+      <path d="M12 6.5V20" />
+    </svg>
+  )
+}
+
 export function GridIcon() {
   return (
     <svg {...base}>

@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { useApp } from '../app/AppContext'
 import { useI18n } from '../i18n/I18n'
 import { EXTRA_AYAHS, PROMPT_WORDS, type Lang, type TextSize, type Theme } from '../lib/settings'
+import { TRANSLATIONS } from '../lib/translations'
 import { clearProgress, exportBackup, importBackup } from '../storage/db'
 import { Dialog, Segmented, Stepper } from '../components/controls'
 import { useToast } from '../components/Toast'
@@ -70,6 +71,16 @@ export function Settings() {
             {quran.text(quran.indexOf(67, 1))}
           </p>
         </div>
+      </section>
+
+      <section className="section" aria-labelledby="reading-h">
+        <h2 id="reading-h">{t.settings.reading}</h2>
+        <Segmented
+          legend={t.settings.translationChoice}
+          value={settings.translation}
+          options={TRANSLATIONS.map((tr) => ({ value: tr.id, label: tr.name }))}
+          onChange={(translation) => updateSettings({ translation })}
+        />
       </section>
 
       <section className="section" aria-labelledby="ayah-h">
