@@ -12,6 +12,6 @@ First release.
 - Optional English translation in the reader, ayah by ayah: Saheeh International or Pickthall.
 - Arabic and English interface with right-to-left layout; light and dark themes in a soft amethyst palette.
 - Works offline and installs as an app.
-- Optional accounts with email-code sign-in and conflict-free sync across devices (Supabase).
+- Optional accounts with email sign-in (link or code) and conflict-free sync across devices (Supabase).
 - Backup download and restore.
 - Tanzil Uthmani text (Hafs), with boundaries checked against in-text rub' signs and quran.com.

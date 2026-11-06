@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { supabase, syncConfigured } from '../sync/client'
+import { appUrl, clearAuthRedirect, readAuthRedirect, supabase, syncConfigured } from '../sync/client'
 import { deleteCloudData, syncNow } from '../sync/sync'
 import { clearProgress, getKv, markAllUnsynced, setKv } from '../storage/db'
 import { useApp } from './AppContext'
@@ -17,6 +17,9 @@ export interface Sync {
   available: boolean
   email: string | null
   status: SyncStatus
+  /** Set when the page was opened from a sign-in link that didn't work here. */
+  linkError: string | null
+  dismissLinkError: () => void
   sendCode: (email: string) => Promise<void>
   verifyCode: (email: string, code: string) => Promise<void>
   syncNow: () => Promise<void>
@@ -43,6 +46,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   const app = useApp()
   const [session, setSession] = useState<Session | null>(null)
   const [status, setStatus] = useState<SyncStatus>({ kind: 'idle' })
+  const [linkError, setLinkError] = useState<string | null>(null)
   const running = useRef<Promise<void> | null>(null)
   const again = useRef(false)
   const appRef = useRef(app)
@@ -53,7 +57,15 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!supabase) return
     void getKv<number>('lastSync').then((at) => at && setStatus({ kind: 'synced', at }))
-    supabase.auth.getSession().then(({ data }) => setSession(data.session))
+    const redirect = readAuthRedirect()
+    // getSession waits for a sign-in link's ?code=… to be exchanged first.
+    supabase.auth.getSession().then(({ data, error }) => {
+      setSession(data.session)
+      if (redirect.error || ((redirect.hasCode || error) && !data.session)) {
+        setLinkError(redirect.error ?? error?.message ?? 'link')
+      }
+      if (redirect.hasCode || redirect.error) clearAuthRedirect()
+    })
     const { data } = supabase.auth.onAuthStateChange((_event, s) => setSession(s))
     return () => data.subscription.unsubscribe()
   }, [])
@@ -122,9 +134,14 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       available: syncConfigured,
       email: session?.user.email ?? null,
       status,
+      linkError,
+      dismissLinkError: () => setLinkError(null),
       sendCode: async (email) => {
         if (!supabase) return
-        const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } })
+        const { error } = await supabase.auth.signInWithOtp({
+          email,
+          options: { shouldCreateUser: true, emailRedirectTo: appUrl() },
+        })
         if (error) throw error
       },
       verifyCode: async (email, code) => {
@@ -162,7 +179,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         setStatus({ kind: 'idle' })
       },
     }),
-    [session, status, run, userId],
+    [session, status, run, userId, linkError],
   )
 
   return <SyncContext.Provider value={value}>{children}</SyncContext.Provider>

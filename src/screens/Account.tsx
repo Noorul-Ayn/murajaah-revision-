@@ -78,9 +78,20 @@ export function Account() {
             ? { dot: 'dot--bad', text: t.account.failed(status.message) }
             : { dot: '', text: t.account.neverSynced }
 
+  const linkMessage = sync.linkError
+    ? /expired|invalid|already/i.test(sync.linkError)
+      ? t.account.linkExpired
+      : t.account.linkFailed
+    : null
+
   return (
     <section className="section" aria-labelledby="account-h">
       <h2 id="account-h">{t.account.title}</h2>
+      {linkMessage && !sync.email && (
+        <p className="error" role="alert">
+          {linkMessage}
+        </p>
+      )}
 
       {sync.email ? (
         <div className="panel stack" style={{ gap: '0.9rem' }}>

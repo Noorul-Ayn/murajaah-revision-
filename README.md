@@ -39,7 +39,7 @@ Murajaah quizzes you on what you've memorized, and has the full mushaf to read p
 - **English translation.** Turn it on in the reader to see each ayah followed by its meaning: Saheeh International or Pickthall, chosen in Settings.
 - **Arabic and English**, with full right-to-left layout, light and dark themes and three Qur'an text sizes.
 - **Offline and installable.** The whole mushaf is bundled; after the first visit it works without a connection.
-- **Accounts and sync (optional).** Sign in with a 6-digit email code to keep progress in step across devices. Without an account everything stays on the device. You can also download and restore a backup file.
+- **Accounts and sync (optional).** Sign in with an emailed link (or a code, if your Supabase project sends one) to keep progress in step across devices. Without an account everything stays on the device. You can also download and restore a backup file.
 
 ## The Qur'an text
 
