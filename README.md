@@ -27,7 +27,7 @@ Murajaah quizzes you on what you've memorized, and has the full mushaf to read p
 
 Home opens on today's date (Hijri and Gregorian), what's due, what you've answered today and your streak, with one button to start revising. Below it: where you stopped reading in the mushaf, the surah you're closest to recording, and a strip showing how strong your memorized rub's are. The first time, it explains the app and asks what you've memorized. Add your name in Settings and Home greets you with it.
 
-The design aims to be calm and easy for anyone, children included: large buttons, soft colours with one colour per quiz mode, and simple grades (Perfect!, Almost, Not yet) with a star when you get one right.
+The design aims to be calm and easy for anyone, children included: large buttons, soft colours from one purple family with a tint per quiz mode, and simple grades (Perfect!, Almost, Not yet) with a star when you get one right.
 
 ## What it quizzes
 

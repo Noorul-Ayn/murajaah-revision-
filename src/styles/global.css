@@ -5,13 +5,15 @@
  * and washes clean while memorizing. The Qur'an text always sits on a board
  * with an arched top; everything around it stays quiet.
  *
- * Colour: a soft amethyst palette chosen to be calm for long sessions —
- * lavender-tinted paper, a lilac board, deep plum ink and one amethyst accent.
- * Grade and strength colours (rose, amber, teal) are muted to sit with it.
+ * Colour: one amethyst family, calm for long sessions — lavender-tinted
+ * paper, a lilac board, deep plum ink and an amethyst accent. Every other
+ * colour is a neighbour of purple (iris, orchid, rose), never green or
+ * yellow: right answers and strong memory are violet, slips and weak memory
+ * are a soft berry rose.
  *
- * Friendly for every age: one clear typeface for Arabic and Latin (Readex
- * Pro), big soft shapes, buttons that look pressable, and a pastel colour
- * with an icon for each kind of practice so they can be told apart at a glance.
+ * Easy for every age: one clear typeface for Arabic and Latin (Readex Pro),
+ * big soft shapes, buttons that look pressable, and a tint with an icon for
+ * each kind of practice so they can be told apart at a glance.
  */
 
 :root {
@@ -27,25 +29,28 @@
   --accent: light-dark(#6b4fa0, #b9a2e6);
   --accent-ink: light-dark(#ffffff, #1e1530);
   --accent-soft: light-dark(#ede6f7, #2f2643);
-  --vermilion: light-dark(#b5475a, #e68a98);
-  --saffron: light-dark(#a87a22, #e0b25a);
-  --verdigris: light-dark(#3e7f6b, #79c4aa);
-  --good: light-dark(#97c4b5, #4e8573);
   --focus: var(--accent);
 
-  /* A pastel and a deep tone for each kind of practice. */
+  /* Feedback: violet when right, berry rose when something slipped. */
+  --right: var(--accent);
+  --wrong: light-dark(#a63f68, #ef98ba);
+  --midway: light-dark(#7d6bb8, #a597d6);
+
+  /* Memory strength, from berry (weak) through pale lilac to deep violet (strong). */
+  --s-weak: light-dark(#e391b0, #a9567a);
+  --s-shaky: light-dark(#ddd0f3, #574878);
+  --s-good: light-dark(#a98fdb, #7f67b8);
+  --s-strong: light-dark(#5f41a0, #cbb8f4);
+
+  /* A soft tint and a deep tone of each colour, all neighbours of purple. */
   --lilac: light-dark(#ece4fb, #2d2440);
   --lilac-ink: light-dark(#5b3f94, #c9b5f2);
-  --mint: light-dark(#dcf3e9, #1f3a31);
-  --mint-ink: light-dark(#23704f, #8fdcb8);
-  --peach: light-dark(#fde6da, #42291f);
-  --peach-ink: light-dark(#a8502b, #f3b08f);
-  --sky: light-dark(#dcecfb, #1f3045);
-  --sky-ink: light-dark(#2a64a0, #9cc7f2);
-  --sun: light-dark(#fff1c7, #3d331a);
-  --sun-ink: light-dark(#8a6100, #f1cf6b);
-  --rose: light-dark(#fde2e6, #44222a);
-  --rose-ink: light-dark(#ac3a4f, #f2a1ae);
+  --iris: light-dark(#e5e5fa, #24253f);
+  --iris-ink: light-dark(#3f4595, #b4b9f2);
+  --orchid: light-dark(#f5e4f3, #36223a);
+  --orchid-ink: light-dark(#813a7c, #e8b1e1);
+  --rose: light-dark(#fbe6ed, #3b2130);
+  --rose-ink: light-dark(#9c3b5e, #f0a8c3);
 
   --font-ui: 'Readex Pro Variable', 'Segoe UI', system-ui, sans-serif;
   --font-quran: 'Amiri Quran', 'Amiri', serif;
@@ -333,7 +338,7 @@ select {
 }
 
 .error {
-  color: var(--vermilion);
+  color: var(--wrong);
   font-size: var(--step--1);
 }
 
@@ -402,7 +407,7 @@ select {
 }
 
 .btn--danger {
-  color: var(--vermilion);
+  color: var(--wrong);
 }
 
 .btn--block {
@@ -559,16 +564,16 @@ select {
   --tile-ink: var(--lilac-ink);
 }
 .mode-tile[data-mode='open'] {
-  --tile-bg: var(--mint);
-  --tile-ink: var(--mint-ink);
+  --tile-bg: var(--iris);
+  --tile-ink: var(--iris-ink);
 }
 .mode-tile[data-mode='name'] {
-  --tile-bg: var(--peach);
-  --tile-ink: var(--peach-ink);
+  --tile-bg: var(--orchid);
+  --tile-ink: var(--orchid-ink);
 }
 .mode-tile[data-mode='link'] {
-  --tile-bg: var(--sky);
-  --tile-ink: var(--sky-ink);
+  --tile-bg: var(--rose);
+  --tile-ink: var(--rose-ink);
 }
 
 @media (max-width: 22rem) {
@@ -822,14 +827,14 @@ select {
   box-shadow: 0 3px 0 color-mix(in srgb, var(--rose-ink) 35%, transparent);
 }
 .grade--hesitated {
-  color: var(--sun-ink);
-  background: var(--sun);
-  box-shadow: 0 3px 0 color-mix(in srgb, var(--sun-ink) 35%, transparent);
+  color: var(--lilac-ink);
+  background: var(--lilac);
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--lilac-ink) 35%, transparent);
 }
 .grade--perfect {
-  color: var(--mint-ink);
-  background: var(--mint);
-  box-shadow: 0 3px 0 color-mix(in srgb, var(--mint-ink) 35%, transparent);
+  color: var(--accent-ink);
+  background: var(--accent);
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--accent) 55%, var(--ink));
 }
 
 .grade:disabled {
@@ -854,14 +859,14 @@ select {
 }
 
 .choice[data-state='right'] {
-  border-color: var(--verdigris);
-  color: var(--verdigris);
+  border-color: var(--right);
+  color: var(--right);
   border-width: 2px;
 }
 
 .choice[data-state='wrong'] {
-  border-color: var(--vermilion);
-  color: var(--vermilion);
+  border-color: var(--wrong);
+  color: var(--wrong);
   border-width: 2px;
 }
 
@@ -877,10 +882,10 @@ select {
 }
 
 .verdict--right {
-  color: var(--verdigris);
+  color: var(--right);
 }
 .verdict--wrong {
-  color: var(--vermilion);
+  color: var(--wrong);
 }
 
 @media (hover: none) {
@@ -934,19 +939,20 @@ select {
 }
 
 .rw--slip {
-  color: var(--vermilion);
+  color: var(--wrong);
 }
 
 .rw--wrong {
-  color: var(--vermilion);
-  background: color-mix(in srgb, var(--vermilion) 12%, transparent);
+  color: var(--wrong);
+  background: color-mix(in srgb, var(--wrong) 12%, transparent);
   border-radius: 0.3em;
   padding-inline: 0.12em;
-  box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--vermilion) 45%, transparent);
+  box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--wrong) 45%, transparent);
 }
 
 .grade--suggested {
-  border-color: currentColor;
+  outline: 2.5px solid var(--accent);
+  outline-offset: 3px;
 }
 
 .grade__tag {
@@ -983,12 +989,12 @@ select {
   width: 22px;
   height: 22px;
   margin: -11px;
-  color: var(--sun-ink);
+  color: var(--accent);
   animation: star-out 750ms ease-out forwards;
 }
 
 .burst span:nth-child(even) {
-  color: var(--accent);
+  color: var(--orchid-ink);
   width: 16px;
   height: 16px;
   margin: -8px;
@@ -1015,7 +1021,7 @@ select {
   display: flex;
   justify-content: center;
   gap: 0.5rem;
-  color: var(--sun-ink);
+  color: var(--accent);
 }
 
 .stars svg {
@@ -1078,13 +1084,13 @@ select {
 }
 
 .tally .t-missed strong {
-  color: var(--vermilion);
+  color: var(--wrong);
 }
 .tally .t-hesitated strong {
-  color: var(--saffron);
+  color: var(--midway);
 }
 .tally .t-perfect strong {
-  color: var(--verdigris);
+  color: var(--right);
 }
 
 .review-list {
@@ -1191,16 +1197,16 @@ select {
   box-shadow: inset 0 0 0 1.5px var(--line);
 }
 .cell[data-s='weak'] {
-  background: var(--vermilion);
+  background: var(--s-weak);
 }
 .cell[data-s='shaky'] {
-  background: var(--saffron);
+  background: var(--s-shaky);
 }
 .cell[data-s='good'] {
-  background: var(--good);
+  background: var(--s-good);
 }
 .cell[data-s='strong'] {
-  background: var(--verdigris);
+  background: var(--s-strong);
 }
 
 .legend {
@@ -1708,13 +1714,13 @@ a.surah-row {
 }
 
 .pip--on {
-  background: var(--verdigris);
-  border-color: var(--verdigris);
+  background: var(--right);
+  border-color: var(--right);
 }
 
 .pip--rec {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--orchid-ink);
+  border-color: var(--orchid-ink);
   margin-inline-start: 4px;
 }
 
@@ -1724,21 +1730,21 @@ a.surah-row {
 }
 
 .dot--rec {
-  background: var(--vermilion);
+  background: var(--wrong);
 }
 
 .rec-badge {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  color: var(--vermilion);
+  color: var(--wrong);
   font-size: var(--step--1);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
 .ok-text {
-  color: var(--verdigris);
+  color: var(--right);
 }
 
 /* ---------- Home ---------- */
@@ -1862,13 +1868,13 @@ a.surah-row {
   --tone-bg: var(--lilac);
   --tone-ink: var(--lilac-ink);
 }
-.today__item--mint {
-  --tone-bg: var(--mint);
-  --tone-ink: var(--mint-ink);
+.today__item--iris {
+  --tone-bg: var(--iris);
+  --tone-ink: var(--iris-ink);
 }
-.today__item--sun {
-  --tone-bg: var(--sun);
-  --tone-ink: var(--sun-ink);
+.today__item--orchid {
+  --tone-bg: var(--orchid);
+  --tone-ink: var(--orchid-ink);
 }
 
 .continue--tile {
@@ -1893,13 +1899,13 @@ a.surah-row {
   color: var(--tone-ink);
 }
 
-.continue--tile[data-tone='sky'] {
-  --tone-bg: var(--sky);
-  --tone-ink: var(--sky-ink);
+.continue--tile[data-tone='iris'] {
+  --tone-bg: var(--iris);
+  --tone-ink: var(--iris-ink);
 }
-.continue--tile[data-tone='sun'] {
-  --tone-bg: var(--sun);
-  --tone-ink: var(--sun-ink);
+.continue--tile[data-tone='orchid'] {
+  --tone-bg: var(--orchid);
+  --tone-ink: var(--orchid-ink);
 }
 
 /* ---------- Dialog and toast ---------- */
@@ -1985,11 +1991,11 @@ a.surah-row {
 }
 
 .dot--ok {
-  background: var(--verdigris);
+  background: var(--right);
 }
 .dot--busy {
-  background: var(--saffron);
+  background: var(--midway);
 }
 .dot--bad {
-  background: var(--vermilion);
+  background: var(--wrong);
 }

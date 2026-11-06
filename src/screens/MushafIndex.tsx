@@ -39,7 +39,7 @@ export function MushafIndex() {
       <h1>{t.mushaf.title}</h1>
 
       {lastPage && (
-        <Link to={`/mushaf/${lastPage}`} className="continue continue--tile" data-tone="sky">
+        <Link to={`/mushaf/${lastPage}`} className="continue continue--tile" data-tone="iris">
           <BookTile />
           <span className="continue__label">{t.mushaf.continue}</span>
           <span className="continue__where">
@@ -48,7 +48,7 @@ export function MushafIndex() {
         </Link>
       )}
 
-      <Link to="/recite" className="continue continue--tile" data-tone="sun">
+      <Link to="/recite" className="continue continue--tile" data-tone="orchid">
         <MicTile />
         <span className="continue__label">{t.recite.title}</span>
         <span className="continue__where">{t.recite.open}</span>

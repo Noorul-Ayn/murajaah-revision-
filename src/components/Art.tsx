@@ -129,7 +129,7 @@ export function HomeArt() {
   return (
     <svg className="home-art" viewBox="0 0 200 140" aria-hidden="true">
       {/* crescent */}
-      <circle cx="158" cy="30" r="15" fill="var(--sun-ink)" opacity="0.85" />
+      <circle cx="158" cy="30" r="15" fill="var(--accent)" opacity="0.85" />
       <circle cx="165" cy="25" r="13" fill="var(--lilac)" />
       {/* stars */}
       {[
@@ -142,13 +142,13 @@ export function HomeArt() {
         <path
           key={k}
           d={`M${x} ${y! - r!}L${x! + r! * 0.35} ${y! - r! * 0.35}L${x! + r!} ${y}L${x! + r! * 0.35} ${y! + r! * 0.35}L${x} ${y! + r!}L${x! - r! * 0.35} ${y! + r! * 0.35}L${x! - r!} ${y}L${x! - r! * 0.35} ${y! - r! * 0.35}Z`}
-          fill="var(--sun-ink)"
+          fill="var(--accent)"
           opacity="0.75"
         />
       ))}
       {/* rahl: two crossed boards */}
-      <rect x="62" y="70" width="18" height="70" rx="5" fill="var(--peach-ink)" transform="rotate(-38 71 105)" />
-      <rect x="120" y="70" width="18" height="70" rx="5" fill="var(--peach-ink)" transform="rotate(38 129 105)" />
+      <rect x="62" y="70" width="18" height="70" rx="5" fill="var(--orchid-ink)" transform="rotate(-38 71 105)" />
+      <rect x="120" y="70" width="18" height="70" rx="5" fill="var(--orchid-ink)" transform="rotate(38 129 105)" />
       <rect x="62" y="70" width="18" height="70" rx="5" fill="#000" opacity="0.08" transform="rotate(-38 71 105)" />
       {/* the open mushaf */}
       <path d="M100 66 L56 52 L52 92 L100 104 Z" fill="var(--surface)" stroke="var(--accent)" strokeWidth="2.5" />

@@ -159,11 +159,11 @@ export function Home() {
             <strong>{num(due)}</strong>
             <span>{t.home.due}</span>
           </div>
-          <div className="today__item today__item--mint">
+          <div className="today__item today__item--iris">
             <strong>{act ? num(act.today) : '–'}</strong>
             <span>{t.home.answered}</span>
           </div>
-          <div className="today__item today__item--sun">
+          <div className="today__item today__item--orchid">
             <strong>
               {act ? num(act.streak) : '–'}
               <StarIcon />
@@ -186,7 +186,7 @@ export function Home() {
         </p>
       </section>
 
-      <Link to={`/mushaf/${lastPage ?? 1}`} className="continue continue--tile" data-tone="sky">
+      <Link to={`/mushaf/${lastPage ?? 1}`} className="continue continue--tile" data-tone="iris">
         <BookTile />
         <span className="continue__label">{lastPage ? t.home.continueReading : t.home.openMushaf}</span>
         <span className="continue__where">
@@ -196,7 +196,7 @@ export function Home() {
         </span>
       </Link>
 
-      <Link to={recite ? `/recite/${recite.surah}` : '/recite'} className="continue continue--tile" data-tone="sun">
+      <Link to={recite ? `/recite/${recite.surah}` : '/recite'} className="continue continue--tile" data-tone="orchid">
         <MicTile />
         <span className="continue__label">{t.recite.title}</span>
         <span className="continue__where">
