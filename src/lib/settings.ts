@@ -3,6 +3,7 @@ import { ORDERS, type Order } from './session'
 import { isScopePart, type Scope } from './scope'
 import { TRANSLATIONS, type TranslationId } from './translations'
 import { MINE, PLAY_REPEATS, PLAY_SPEEDS, RECITERS } from './reciters'
+import { PRINTS, type Print } from './layout'
 
 export type Lang = 'ar' | 'en'
 export type Theme = 'system' | 'light' | 'dark'
@@ -23,7 +24,9 @@ export interface Settings {
   sessionSize: number
   order: Order
   mode: Mode
-  /** Which English translation the mushaf reader shows. */
+  /** Which Madinah mushaf print the user reads from: page numbers and the page quiz follow it. */
+  mushaf: Print
+  /** Which English translation the mushaf reader and the meaning quiz show. */
   translation: TranslationId
   /** Whether the mushaf reader shows the translation under each ayah. */
   showTranslation: boolean
@@ -56,6 +59,7 @@ export function defaultSettings(browserLang = 'en'): Settings {
     sessionSize: 20,
     order: 'smart',
     mode: 'ayah',
+    mushaf: '1405',
     translation: 'en-sahih',
     showTranslation: false,
     listenSound: true,
@@ -87,6 +91,7 @@ export function sanitizeSettings(value: unknown, base: Settings = defaultSetting
     sessionSize: clampInt(v.sessionSize, 5, 100, base.sessionSize),
     order: oneOf(v.order, ORDERS, base.order),
     mode: oneOf(v.mode, MODES, base.mode),
+    mushaf: oneOf(v.mushaf, PRINTS, base.mushaf),
     translation: oneOf(
       v.translation,
       TRANSLATIONS.map((t) => t.id),

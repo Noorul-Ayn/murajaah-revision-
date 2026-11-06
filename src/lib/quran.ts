@@ -75,6 +75,13 @@ export class Quran {
     this.surahStarts = data.surahs.map((s) => s.start)
   }
 
+  /** The same text with another print's page breaks (see layout.ts). */
+  withPages(pages: readonly number[]): Quran {
+    if (pages.length !== PAGE_COUNT) throw new RangeError(`expected ${PAGE_COUNT} page starts`)
+    if (pages.every((p, i) => p === this.data.pages[i])) return this
+    return new Quran({ ...this.data, pages: [...pages] })
+  }
+
   get surahs(): readonly Surah[] {
     return this.data.surahs
   }

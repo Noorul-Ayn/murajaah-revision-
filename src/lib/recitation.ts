@@ -160,6 +160,13 @@ export function buildExpected(
 
 export type Slip = 'wrong' | 'skipped'
 
+/** A run of wrong words: heard[from..to) said while `at` was awaited. */
+export interface Stray {
+  at: number
+  from: number
+  to: number
+}
+
 export interface Follow {
   /** Index of the next expected word. */
   next: number
@@ -167,6 +174,11 @@ export interface Follow {
   slips: Map<number, Slip>
   /** The reciter is stuck on a wrong word at `next`. */
   stuck: boolean
+  /**
+   * Every run of wrong words, including one still going on, so what was said
+   * instead can be looked up elsewhere in the Qur'an (see similar.ts).
+   */
+  strays: Stray[]
   done: boolean
 }
 
@@ -190,6 +202,14 @@ export function follow(expected: readonly Expected[], heard: readonly string[], 
   while (p < n && expected[p]!.given) p++
   let i = 0
   let stuck = false
+  const strays: Stray[] = []
+  let run: { at: number; from: number } | null = null
+  /** Back on track: close the run of wrong words, which ended before heard[to]. */
+  const recover = (to: number) => {
+    if (run) strays.push({ ...run, to })
+    run = null
+    stuck = false
+  }
   /** Position within the current ayah's said words while going back over them; -1 when not. */
   let back = -1
 
@@ -212,12 +232,13 @@ export function follow(expected: readonly Expected[], heard: readonly string[], 
   }
 
   while (i < heard.length && p < n) {
+    const at = i
     const w = heard[i]!
     const tentative = lastIsTentative && i === heard.length - 1
     if (sameWord(w, E(p))) {
       p++
       i++
-      stuck = false
+      recover(at)
       back = -1
       continue
     }
@@ -251,14 +272,14 @@ export function follow(expected: readonly Expected[], heard: readonly string[], 
     if (p + 1 < n && sameWord(w, E(p) + E(p + 1))) {
       p += 2
       i++
-      stuck = false
+      recover(at)
       continue
     }
     // The recognizer split one word in two.
     if (i + 1 < heard.length && sameWord(w + heard[i + 1], E(p))) {
       p++
       i += 2
-      stuck = false
+      recover(at)
       continue
     }
     if (tentative) break
@@ -277,14 +298,16 @@ export function follow(expected: readonly Expected[], heard: readonly string[], 
       }
       p += k + 1
       i++
-      stuck = false
+      recover(at)
       continue
     }
     slips.set(p, slips.get(p) ?? 'wrong')
+    run ??= { at: p, from: i }
     stuck = true
     i++
   }
-  return { next: p, slips, stuck, done: p >= n }
+  if (run) strays.push({ ...run, to: heard.length })
+  return { next: p, slips, stuck, strays, done: p >= n }
 }
 
 /** A grade to suggest from the slips: none → perfect, one or two → hesitated, more → missed. */

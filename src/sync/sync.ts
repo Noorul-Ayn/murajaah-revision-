@@ -40,6 +40,11 @@ interface SyncMeta {
   cursor: string
 }
 
+/** Postgres' error code when a row breaks a check constraint. */
+const CHECK_VIOLATION = '23514'
+/** The modes every version of the database accepts. */
+const ORIGINAL_MODES: ReadonlySet<Mode> = new Set<Mode>(['ayah', 'open', 'name', 'link'])
+
 /** Re-read a few minutes before the cursor in case of late commits; duplicates are ignored. */
 const OVERLAP_MS = 5 * 60 * 1000
 const PAGE = 1000
@@ -55,6 +60,11 @@ interface RunRow {
 
 export interface SyncResult {
   pushed: number
+  /**
+   * Answers kept on this device because the server doesn't accept their mode
+   * yet (its database predates the newer modes; see docs/SETUP.md).
+   */
+  held?: number
   pulled: number
   /** Whole-surah runs pulled from other devices. */
   pulledRuns?: number
@@ -93,16 +103,24 @@ export async function syncNow(client: SupabaseClient, userId: string): Promise<S
   await setKv('owner', userId)
 
   let pushed = 0
-  for (;;) {
-    const batch = await getUnsyncedReviews(500)
-    if (batch.length === 0) break
-    const { error } = await client
-      .from('reviews')
-      .upsert(batch.map(toRow(userId)), { onConflict: 'id', ignoreDuplicates: true })
+  let held = 0
+  const push = (batch: readonly Review[]) =>
+    client.from('reviews').upsert(batch.map(toRow(userId)), { onConflict: 'id', ignoreDuplicates: true })
+  const unsynced = await getUnsyncedReviews()
+  for (let k = 0; k < unsynced.length; k += 500) {
+    let batch = unsynced.slice(k, k + 500)
+    let { error } = await push(batch)
+    // A check violation: the server's database predates the newer modes. Push
+    // the rest and keep those here until its migration has been run.
+    if (error?.code === CHECK_VIOLATION) {
+      const accepted = batch.filter((r) => ORIGINAL_MODES.has(r.mode))
+      held += batch.length - accepted.length
+      batch = accepted
+      error = accepted.length ? (await push(accepted)).error : null
+    }
     if (error) throw error
     await markSynced(batch.map((r) => r.id))
     pushed += batch.length
-    if (batch.length < 500) break
   }
 
   const meta = await getKv<SyncMeta | null>('sync')
@@ -130,7 +148,7 @@ export async function syncNow(client: SupabaseClient, userId: string): Promise<S
 
   const pulledRuns = await syncRuns(client, userId)
 
-  const result: SyncResult = { pushed, pulled, pulledRuns }
+  const result: SyncResult = { pushed, pulled, pulledRuns, ...(held ? { held } : {}) }
   const local = await getSettings()
   const { data: remote, error } = await client.from('user_settings').select('data').eq('user_id', userId).maybeSingle()
   if (error) throw error

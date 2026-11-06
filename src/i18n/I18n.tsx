@@ -9,6 +9,8 @@ export interface I18n {
   t: Strings
   /** Formats a number with Arabic-Indic digits in Arabic, Western digits in English. */
   num: (n: number) => string
+  /** Like num, without thousands separators (years, page numbers in prose). */
+  year: (n: number) => string
   surahName: (s: Surah) => string
   quarterLabel: (q: number) => string
   relativeTime: (ms: number, now?: number) => string
@@ -18,11 +20,13 @@ function make(lang: Lang): I18n {
   const t = STRINGS[lang]
   const nf = new Intl.NumberFormat(lang === 'ar' ? 'ar-EG' : 'en', { useGrouping: true })
   const num = (n: number) => nf.format(n)
+  const plain = new Intl.NumberFormat(lang === 'ar' ? 'ar-EG' : 'en', { useGrouping: false })
   const rtf = new Intl.RelativeTimeFormat(lang, { numeric: 'auto' })
   return {
     lang,
     t,
     num,
+    year: (n) => plain.format(n),
     surahName: (s) => (lang === 'ar' ? `سورة ${s.name}` : s.tname),
     quarterLabel: (q) => {
       const { hizb, part } = quarterParts(q)

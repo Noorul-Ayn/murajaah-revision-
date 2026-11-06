@@ -60,7 +60,10 @@ export function Home() {
     }
   }, [recitations, mask, quran, sync.remoteRecordings])
 
-  const items = useMemo(() => itemsInScope(settings.mode, mask, quran), [settings.mode, mask, quran])
+  const items = useMemo(
+    () => itemsInScope(settings.mode, mask, quran, states.keys()),
+    [settings.mode, mask, quran, states],
+  )
   const due = useMemo(
     () =>
       items.filter((id) => {

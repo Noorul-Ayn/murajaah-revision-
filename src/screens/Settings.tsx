@@ -1,8 +1,10 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useLocation } from 'react-router'
 import { useApp } from '../app/AppContext'
 import { useI18n } from '../i18n/I18n'
 import { EXTRA_AYAHS, PROMPT_WORDS, type Lang, type TextSize, type Theme } from '../lib/settings'
 import { TRANSLATIONS } from '../lib/translations'
+import { PRINTS } from '../lib/layout'
 import { clearProgress, exportBackup, importBackup } from '../storage/db'
 import { Dialog, Segmented, Stepper } from '../components/controls'
 import { useToast } from '../components/Toast'
@@ -17,6 +19,12 @@ export function Settings() {
   const toast = useToast()
   const fileRef = useRef<HTMLInputElement>(null)
   const [confirmReset, setConfirmReset] = useState(false)
+
+  // Links like #/settings#mushaf open at that section.
+  const { hash } = useLocation()
+  useEffect(() => {
+    if (hash) document.getElementById(hash.slice(1))?.scrollIntoView({ block: 'start' })
+  }, [hash])
 
   const download = async () => {
     const backup = await exportBackup()
@@ -108,6 +116,21 @@ export function Settings() {
 
       <section className="section" aria-labelledby="reading-h">
         <h2 id="reading-h">{t.settings.reading}</h2>
+        <fieldset className="choice-list" id="mushaf">
+          <legend>{t.settings.mushaf}</legend>
+          <p className="muted small">{t.settings.mushafHint}</p>
+          {PRINTS.map((p) => (
+            <label key={p} className="choice-row">
+              <input
+                type="radio"
+                name="mushaf"
+                checked={settings.mushaf === p}
+                onChange={() => updateSettings({ mushaf: p })}
+              />
+              <span>{t.settings.prints[p]}</span>
+            </label>
+          ))}
+        </fieldset>
         <Segmented
           legend={t.settings.translationChoice}
           value={settings.translation}

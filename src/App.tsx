@@ -84,12 +84,13 @@ function UpdatePrompt() {
 
 function Shell() {
   const { t } = useI18n()
-  const { pathname } = useLocation()
+  const { pathname, hash } = useLocation()
   const [inQuiz, setFocus] = useState(false)
 
+  // A new screen starts at the top, unless the link points at a section of it.
   useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [pathname])
+    if (!hash) window.scrollTo(0, 0)
+  }, [pathname, hash])
 
   return (
     <div className="shell">

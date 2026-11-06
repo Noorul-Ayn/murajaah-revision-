@@ -83,7 +83,7 @@ describe('local storage', () => {
  * Just enough of the Supabase query builder for sync.ts, backed by arrays.
  * `user` plays the part of row-level security: queries only see that user's rows.
  */
-function fakeSupabase() {
+function fakeSupabase(schema: { oldSchema?: boolean } = {}) {
   const tables: Record<'reviews' | 'user_settings' | 'surah_runs', Record<string, unknown>[]> = {
     reviews: [],
     user_settings: [],
@@ -129,7 +129,16 @@ function fakeSupabase() {
           input: Record<string, unknown> | Record<string, unknown>[],
           opts?: { ignoreDuplicates?: boolean },
         ) => {
-          for (const row of Array.isArray(input) ? input : [input]) {
+          const all = Array.isArray(input) ? input : [input]
+          // A database from before the newer modes rejects the whole batch.
+          if (
+            schema.oldSchema &&
+            table === 'reviews' &&
+            all.some((r) => !['ayah', 'open', 'name', 'link'].includes(String(r.mode)))
+          ) {
+            return { error: { code: '23514', message: 'new row violates check constraint "reviews_mode_check"' } }
+          }
+          for (const row of all) {
             const key = table === 'reviews' ? 'id' : 'user_id'
             const i = rows.findIndex((r) => r[key] === row[key])
             const stamped = table === 'reviews' ? { ...row, created_at: new Date((clock += 1000)).toISOString() } : row
@@ -175,6 +184,29 @@ describe('sync', () => {
     // Nothing new: nothing moves.
     const third = await syncNow(client, 'user-a')
     expect(third).toMatchObject({ pushed: 0, pulled: 0 })
+  })
+
+  it('keeps answers from the newer modes on the device until the server accepts them', async () => {
+    const server = fakeSupabase({ oldSchema: true })
+    const client = server as unknown as SupabaseClient
+    await addReview(review('ayah:1:2', 'perfect', 1_000))
+    await addReview({ ...review('place:1:2', 'hesitated', 2_000), mode: 'place' })
+    await addReview({ ...review('pair:2:58:7:161', 'missed', 3_000), mode: 'pair' })
+
+    const first = await syncNow(client, 'user-a')
+    expect(first).toMatchObject({ pushed: 1, held: 2 })
+    expect(server.tables.reviews.map((r) => r.item_id)).toEqual(['ayah:1:2'])
+    expect((await getUnsyncedReviews()).map((r) => r.itemId).sort()).toEqual(['pair:2:58:7:161', 'place:1:2'])
+    // Their progress still counts on this device.
+    expect((await getAllStates()).get('place:1:2')?.lastGrade).toBe('hesitated')
+
+    // Once the migration has been run, they go up with the next sync.
+    const updated = fakeSupabase()
+    updated.tables.reviews.push(...server.tables.reviews)
+    const second = await syncNow(updated as unknown as SupabaseClient, 'user-a')
+    expect(second.pushed).toBe(2)
+    expect(second.held).toBeUndefined()
+    expect(await getUnsyncedReviews()).toEqual([])
   })
 
   it('keeps the newer copy of settings', async () => {

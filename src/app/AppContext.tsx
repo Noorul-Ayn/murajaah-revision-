@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { loadQuran, type Quran } from '../lib/quran'
+import { loadLayout, PageLayout, type LayoutData } from '../lib/layout'
 import type { ItemId, Mode } from '../lib/items'
 import type { Grade3, ItemState } from '../lib/srs'
 import type { Settings } from '../lib/settings'
@@ -7,7 +8,10 @@ import { addReview, getAllStates, getSettings, putSettings } from '../storage/db
 import { I18nProvider } from '../i18n/I18n'
 
 export interface App {
+  /** The Qur'an, with the page breaks of the user's mushaf print. */
   quran: Quran
+  /** Where each ayah sits on the page in the user's mushaf print. */
+  layout: PageLayout
   settings: Settings
   states: ReadonlyMap<ItemId, ItemState>
   /** Changes settings and stamps them so the newest copy wins when syncing. */
@@ -34,7 +38,7 @@ export function useApp(): App {
 type Boot =
   | { status: 'loading' }
   | { status: 'error' }
-  | { status: 'ready'; quran: Quran; settings: Settings; states: Map<ItemId, ItemState> }
+  | { status: 'ready'; quran: Quran; layout: LayoutData; settings: Settings; states: Map<ItemId, ItemState> }
 
 function applyDocumentSettings(s: Settings) {
   const root = document.documentElement
@@ -69,10 +73,10 @@ export function AppProvider({
         if (cancelled) return
         applyDocumentSettings(s)
         setSettings(s)
-        return Promise.all([loadQuran(), getAllStates()]).then(([quran, st]) => {
+        return Promise.all([loadQuran(), loadLayout(), getAllStates()]).then(([quran, layout, st]) => {
           if (cancelled) return
           setStates(st)
-          setBoot({ status: 'ready', quran, settings: s, states: st })
+          setBoot({ status: 'ready', quran, layout, settings: s, states: st })
         })
       })
       .catch((err: unknown) => {
@@ -121,11 +125,18 @@ export function AppProvider({
     setStates(await getAllStates())
   }, [])
 
+  const print = settings?.mushaf ?? '1405'
+  const layout = useMemo(
+    () => (boot.status === 'ready' ? new PageLayout(boot.layout, print, boot.quran) : null),
+    [boot, print],
+  )
+
   const value = useMemo<App | null>(
     () =>
-      boot.status === 'ready' && settings
+      boot.status === 'ready' && settings && layout
         ? {
-            quran: boot.quran,
+            quran: layout.quran,
+            layout,
             settings,
             states,
             updateSettings,
@@ -139,6 +150,7 @@ export function AppProvider({
         : null,
     [
       boot,
+      layout,
       settings,
       states,
       updateSettings,

@@ -1,5 +1,5 @@
 import { isDue, recall, type ItemState } from './srs'
-import { itemAyahIndex, parseItem, type ItemId, type Mode } from './items'
+import { itemAyahIndex, pairOther, parseItem, type ItemId, type Mode } from './items'
 import { QUARTER_COUNT, type Quran } from './quran'
 import { wordCount } from './text'
 
@@ -91,6 +91,9 @@ export type Question =
   | { mode: 'link'; itemId: ItemId; quarter: number; previous: number; reveal: number[] }
   | { mode: 'name'; itemId: ItemId; quarter: number; choices: number[] }
   | { mode: 'ayah'; itemId: ItemId; index: number; reveal: number[] }
+  | { mode: 'meaning'; itemId: ItemId; index: number; reveal: number[] }
+  | { mode: 'place'; itemId: ItemId; index: number }
+  | { mode: 'pair'; itemId: ItemId; index: number; other: number; reveal: number[] }
 
 /**
  * The ayahs to show when revealing the opening of a quarter: the first ayah,
@@ -166,6 +169,16 @@ export function buildQuestion(
       const reveal = [index]
       for (let k = 1; k <= opts.extraAyahs && index + k <= surahEnd; k++) reveal.push(index + k)
       return { mode: 'ayah', itemId, index, reveal }
+    }
+    case 'meaning': {
+      const index = itemAyahIndex(quran, itemId)!
+      return { mode: 'meaning', itemId, index, reveal: [index] }
+    }
+    case 'place':
+      return { mode: 'place', itemId, index: itemAyahIndex(quran, itemId)! }
+    case 'pair': {
+      const index = itemAyahIndex(quran, itemId)!
+      return { mode: 'pair', itemId, index, other: pairOther(quran, itemId)!, reveal: [index] }
     }
   }
 }

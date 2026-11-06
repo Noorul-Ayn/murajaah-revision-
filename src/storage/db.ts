@@ -164,7 +164,8 @@ export async function mergeReviews(incoming: readonly Review[], synced: 0 | 1): 
   return touched.length
 }
 
-export async function getUnsyncedReviews(limit = 500): Promise<Review[]> {
+/** Reviews not yet on the server, oldest first (all of them unless `limit` is given). */
+export async function getUnsyncedReviews(limit?: number): Promise<Review[]> {
   return (await db()).getAllFromIndex('reviews', 'bySynced', 0, limit)
 }
 

@@ -32,9 +32,10 @@ export function Summary({ results }: { results: Result[] }) {
   const describe = (id: ItemId) => {
     const p = parseItem(id)
     if (!p) return { label: id, index: 0 }
-    if (p.mode === 'ayah') {
+    if (!('quarter' in p)) {
       const index = itemAyahIndex(quran, id)!
-      return { label: verseLabel(i18n, quran, index), index }
+      const label = verseLabel(i18n, quran, index)
+      return { label: p.mode === 'ayah' ? label : `${label}${t.sep}${t.modes[p.mode].title}`, index }
     }
     const index = quran.quarterStart(p.quarter)
     return { label: `${i18n.quarterLabel(p.quarter)}${t.sep}${t.modes[p.mode].title}`, index }

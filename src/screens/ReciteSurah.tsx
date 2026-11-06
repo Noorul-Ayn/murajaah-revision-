@@ -5,6 +5,9 @@ import { useSync } from '../app/SyncContext'
 import { useFocusMode } from '../app/focus'
 import { useI18n } from '../i18n/I18n'
 import { buildExpected, follow, words as heardWords, type Expected } from '../lib/recitation'
+import { mixupsIn, wordIndexFor } from '../lib/similar'
+import { pairItem } from '../lib/items'
+import { Mixups } from '../components/Mixups'
 import { cleanDays, cleanToday, RUNS_TO_UNLOCK, canRecord } from '../lib/runs'
 import { loadSimpleText } from '../lib/simple'
 import { primeAudio, warn } from '../lib/sound'
@@ -49,7 +52,7 @@ export function ReciteSurah() {
 }
 
 function ReciteSurahScreen({ surahNo }: { surahNo: number }) {
-  const { quran, settings, recitations, touchRecitations } = useApp()
+  const { quran, settings, recitations, touchRecitations, recordAnswer } = useApp()
   const sync = useSync()
   const i18n = useI18n()
   const { t, num } = i18n
@@ -67,6 +70,8 @@ function ReciteSurahScreen({ surahNo }: { surahNo: number }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [startError, setBusyError] = useState<string | null>(null)
   const [openedAt] = useState(() => Date.now())
+  const [simple, setSimple] = useState<readonly string[] | null>(null)
+  const [dismissed, setDismissed] = useState<ReadonlySet<number>>(() => new Set())
   const speech = useSpeech()
   const recorder = useRecorder()
   const warned = useRef(new Set<number>())
@@ -105,6 +110,11 @@ function ReciteSurahScreen({ surahNo }: { surahNo: number }) {
     () => (expected ? follow(expected, heard, speech.interimText.length > 0) : null),
     [expected, heard, speech.interimText],
   )
+  // Similar ayahs the recitation drifted into; saved as pairs to practise when the run ends.
+  const mixups = useMemo(() => {
+    if (!expected || !followed || !simple) return []
+    return mixupsIn(wordIndexFor(simple), expected, heard, followed.strays).filter((m) => !dismissed.has(m.ayah))
+  }, [expected, followed, simple, heard, dismissed])
 
   const begin = async (m: 'run' | 'record') => {
     primeAudio()
@@ -127,12 +137,14 @@ function ReciteSurahScreen({ surahNo }: { surahNo: number }) {
     }
     speech.start()
     setMode(m)
-    const simple = await loadSimpleText()
+    setDismissed(new Set())
+    const plain = await loadSimpleText()
+    setSimple(plain)
     setExpected(
       buildExpected(
         indices,
         (i) => quran.text(i),
-        (i) => simple[i]!,
+        (i) => plain[i]!,
         0,
       ),
     )
@@ -151,6 +163,7 @@ function ReciteSurahScreen({ surahNo }: { surahNo: number }) {
       finishing.current = true
       speech.stop()
       const take = mode === 'record' ? await recorder.stop() : null
+      for (const m of mixups) await recordAnswer(pairItem(quran, m.ayah, m.other), 'missed', 'pair')
       const now = Date.now()
       const run: Run = { id: crypto.randomUUID(), surah: surahNo, at: now, slips, synced: 0 }
       const newDay = slips === 0 && !cleanToday(runs, surahNo, now)
@@ -168,7 +181,7 @@ function ReciteSurahScreen({ surahNo }: { surahNo: number }) {
       setMode('idle')
       setExpected(null)
     },
-    [mode, recorder, runs, speech, surahNo, touchRecitations],
+    [mode, recorder, runs, speech, surahNo, touchRecitations, mixups, recordAnswer, quran],
   )
 
   // Warn on slips, note when each ayah starts, and finish at the end.
@@ -275,6 +288,7 @@ function ReciteSurahScreen({ surahNo }: { surahNo: number }) {
             <p className="note">{t.listen.loading}</p>
           )}
         </div>
+        <Mixups mixups={mixups} simple={simple} onDismiss={(a) => setDismissed((d) => new Set(d).add(a))} />
         <div className="quiz__actions">
           <p className="listen-status" role={speech.error || busyError ? 'alert' : 'status'}>
             {speech.listening && (

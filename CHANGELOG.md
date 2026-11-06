@@ -6,7 +6,10 @@ First release.
 
 - An easy, friendly design: large pressable buttons, soft colours with one colour per quiz mode, simple grades (Perfect!, Almost, Not yet), a star burst on a perfect answer and stars on the summary. Optional name greeting.
 - Home: today's date (Hijri and Gregorian), what's due, today's answers and streak, start revising in one tap, continue reading, your recitation, and a memorization strength strip.
-- Four quiz modes: continue the ayah, start of a rub', name the rub', link the quarters.
+- Seven quiz modes: continue the ayah, start of a rub', name the rub', link the quarters, where on the page, from the meaning, and tell them apart.
+- Where on the page: tap the line an ayah begins on in a drawing of the open 15-line Madinah mushaf, for the 1405 AH or the 1421 AH print (chosen in Settings; page numbers throughout follow it).
+- Similar ayahs found from your own slips while reciting aloud, compared word by word and saved as pairs to practise.
+- From the meaning: recite an ayah from its English meaning.
 - Choose what you've memorized by juz, hizb, surah or ayah range.
 - Spaced repetition (FSRS) per ayah and per quarter, weakest first; missed items return within the session.
 - Progress map of all 240 quarters.

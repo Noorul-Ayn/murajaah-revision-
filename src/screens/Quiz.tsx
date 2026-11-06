@@ -3,10 +3,10 @@ import { Navigate, useLocation, useNavigate } from 'react-router'
 import { useApp } from '../app/AppContext'
 import { useI18n } from '../i18n/I18n'
 import { verseLabel } from '../i18n/labels'
-import { ayahItem, itemsInScope, MIN_AYAH_WORDS, type ItemId, type Mode } from '../lib/items'
+import { ayahItem, itemsInScope, MIN_AYAH_WORDS, pairItem, type ItemId, type Mode } from '../lib/items'
 import { scopeMask, type Scope } from '../lib/scope'
 import { buildQuestion, pickItems, seededRng, type Order, type Question } from '../lib/session'
-import { leadingWords, splitWords, wordCount } from '../lib/text'
+import { leadingWords, openingText, splitWords, wordCount } from '../lib/text'
 import { QUARTER_COUNT } from '../lib/quran'
 import type { Grade3 } from '../lib/srs'
 import { Ayahs, PromptWords } from '../components/QuranText'
@@ -22,6 +22,11 @@ import { loadSimpleText } from '../lib/simple'
 import { primeAudio, warn } from '../lib/sound'
 import { getKv, setKv } from '../storage/db'
 import { useFocusMode } from '../app/focus'
+import { PageSpread } from '../components/PageSpread'
+import { Mixups } from '../components/Mixups'
+import { isRightPage, type Spot } from '../lib/layout'
+import { ayahDiff, mixupsIn, sharedOpening, wordIndexFor } from '../lib/similar'
+import { loadTranslation, type Translation } from '../lib/translations'
 
 export type QuizRequest = { mode: Mode; scope: Scope; size: number; order: Order } | { mode: Mode; itemIds: ItemId[] }
 
@@ -45,7 +50,7 @@ export function Quiz() {
 }
 
 function QuizSession({ request }: { request: QuizRequest }) {
-  const { quran, settings, states, recordAnswer } = useApp()
+  const { quran, layout, settings, states, recordAnswer } = useApp()
   const i18n = useI18n()
   const { t, num } = i18n
   const navigate = useNavigate()
@@ -58,7 +63,7 @@ function QuizSession({ request }: { request: QuizRequest }) {
       'itemIds' in request
         ? request.itemIds
         : pickItems(
-            itemsInScope(request.mode, mask, quran),
+            itemsInScope(request.mode, mask, quran, states.keys()),
             states,
             request.order,
             request.size,
@@ -94,6 +99,17 @@ function QuizSession({ request }: { request: QuizRequest }) {
   const [noticeOpen, setNoticeOpen] = useState(false)
   const warned = useRef(new Set<number>())
 
+  // Where on the page: the line tapped, and how the answer went once checked.
+  const [spot, setSpot] = useState<Spot | null>(null)
+  const [placed, setPlaced] = useState<{ raw: Grade3; grade: Grade3 } | null>(null)
+  // From the meaning.
+  const [translation, setTranslation] = useState<Translation | null>(null)
+  const [translationFailed, setTranslationFailed] = useState(false)
+  // Plain-spelling text: for following a recitation, finding mix-ups and comparing similar ayahs.
+  const [simple, setSimple] = useState<readonly string[] | null>(null)
+  /** Mix-ups the reciter said weren't (by the ayah they were reciting). */
+  const [dismissed, setDismissed] = useState<ReadonlySet<number>>(() => new Set())
+
   const itemId = queue[pos]
   const question: Question | null = useMemo(
     () =>
@@ -118,16 +134,22 @@ function QuizSession({ request }: { request: QuizRequest }) {
 
   /** Records the answer (and any ayahs recited after it) and moves on. */
   const advance = useCallback(
-    async (g: Grade3, keepVoice: boolean, extra: readonly { itemId: ItemId; grade: Grade3 }[]) => {
+    async (
+      g: Grade3,
+      keepVoice: boolean,
+      extra: readonly { itemId: ItemId; grade: Grade3 }[],
+      pairs: readonly { itemId: ItemId; grade: Grade3 }[],
+    ) => {
       if (!question || busy) return
       setBusy(true)
       try {
         await recordAnswer(question.itemId, g, question.mode)
         for (const c of extra) await recordAnswer(c.itemId, c.grade, 'ayah')
+        for (const c of pairs) await recordAnswer(c.itemId, c.grade, 'pair')
       } finally {
         setBusy(false)
       }
-      setResults((r) => [...r, { itemId: question.itemId, grade: g }, ...extra])
+      setResults((r) => [...r, { itemId: question.itemId, grade: g }, ...extra, ...pairs])
       if (g === 'perfect') setBurst((b) => b + 1)
       if (!keepVoice) setVoice(false)
       if (g === 'missed' && !requeued.has(question.itemId)) {
@@ -146,19 +168,66 @@ function QuizSession({ request }: { request: QuizRequest }) {
       setExtraWords(0)
       setHintShown(false)
       setChoice(null)
+      setDismissed(new Set())
     },
     [question, busy, recordAnswer, requeued, pos, speech],
   )
 
-  // Ayah mode: prompt words and the hint cap.
-  const ayahPrompt = useMemo(() => {
-    if (question?.mode !== 'ayah') return null
-    const base = leadingWords(quran.text(question.index), settings.promptWords).shown.length
-    const total = splitWords(quran.text(question.index)).words.length
-    const shown = Math.min(base + extraWords, total)
-    return { shown, total }
-  }, [question, quran, settings.promptWords, extraWords])
+  // The plain text, loaded when a pair needs it (reciting aloud loads it too).
+  const needsSimple = question?.mode === 'pair'
+  useEffect(() => {
+    if (!needsSimple || simple) return
+    let live = true
+    void loadSimpleText().then((s) => {
+      if (live) setSimple(s)
+    })
+    return () => {
+      live = false
+    }
+  }, [needsSimple, simple])
+
+  // The translation, for the meaning quiz.
+  const needsTranslation = question?.mode === 'meaning'
+  useEffect(() => {
+    if (!needsTranslation) return
+    let live = true
+    loadTranslation(settings.translation).then(
+      (tr) => live && setTranslation(tr),
+      () => live && setTranslationFailed(true),
+    )
+    return () => {
+      live = false
+    }
+  }, [needsTranslation, settings.translation])
+
+  /**
+   * Words of the ayah shown before reciting: its opening (continue the ayah),
+   * nothing (from the meaning), or the opening it shares with its look-alike
+   * (a pair), plus any words asked for as hints.
+   */
+  const prompt = useMemo(() => {
+    if (question?.mode !== 'ayah' && question?.mode !== 'meaning' && question?.mode !== 'pair') return null
+    const text = quran.text(question.index)
+    const total = splitWords(text).words.length
+    let base = question.mode === 'meaning' ? 0 : leadingWords(text, settings.promptWords).shown.length
+    if (question.mode === 'pair' && simple) {
+      const shared = sharedOpening(
+        { uthmani: text, simple: simple[question.index]! },
+        { simple: simple[question.other]! },
+      )
+      base = Math.min(Math.max(base, shared), total - 1)
+    }
+    return { shown: Math.min(base + extraWords, total), total }
+  }, [question, quran, settings.promptWords, extraWords, simple])
   const usedWordHint = extraWords > 0
+
+  const pairDiff = useMemo(() => {
+    if (question?.mode !== 'pair' || !simple) return null
+    return ayahDiff(
+      { uthmani: quran.text(question.index), simple: simple[question.index]! },
+      { uthmani: quran.text(question.other), simple: simple[question.other]! },
+    )
+  }, [question, quran, simple])
 
   const heard = useMemo(
     () => heardWords(`${speech.finalText} ${speech.interimText}`),
@@ -196,7 +265,25 @@ function QuizSession({ request }: { request: QuizRequest }) {
         .map((a) => ({ itemId: ayahItem(quran, a.index), grade: suggestGrade(a.slips) })),
     [recited, quran],
   )
-  const grade = useCallback((g: Grade3) => advance(g, false, continuation), [advance, continuation])
+  /**
+   * Similar ayahs the recitation drifted into, found from the words said
+   * after a slip. Saved as pairs to practise when moving on, unless dismissed.
+   */
+  const wordIndex = useMemo(() => (simple ? wordIndexFor(simple) : null), [simple])
+  const mixups = useMemo(() => {
+    if (!recite || !followed || !wordIndex) return []
+    return mixupsIn(wordIndex, recite.expected, heard, followed.strays).filter(
+      (m) =>
+        !dismissed.has(m.ayah) &&
+        !(question?.mode === 'pair' && m.ayah === question.index && m.other === question.other),
+    )
+  }, [recite, followed, wordIndex, heard, dismissed, question])
+  const pairs = useMemo(
+    () => mixups.map((m) => ({ itemId: pairItem(quran, m.ayah, m.other), grade: 'missed' as Grade3 })),
+    [mixups, quran],
+  )
+
+  const grade = useCallback((g: Grade3) => advance(g, false, continuation, pairs), [advance, continuation, pairs])
 
   // Warn once per slip; stop at the end of what can be followed.
   const { listening, stop: stopListening } = speech
@@ -216,10 +303,11 @@ function QuizSession({ request }: { request: QuizRequest }) {
   // A recitation followed to the very end reveals the answer by itself.
   const revealed = revealedByUser || followed?.done === true
 
-  const canListen = question !== null && question.mode !== 'name' && speechSupported()
+  const recitable = question !== null && question.mode !== 'name' && question.mode !== 'place'
+  const canListen = recitable && speechSupported()
 
   const startListening = useCallback(async () => {
-    if (!question || question.mode === 'name') return
+    if (!question || question.mode === 'name' || question.mode === 'place') return
     primeAudio()
     if (!(await getKv<boolean>('speechNotice'))) {
       setNoticeOpen(true)
@@ -228,8 +316,9 @@ function QuizSession({ request }: { request: QuizRequest }) {
     warned.current.clear()
     setVoice(true)
     speech.start()
-    const simple = await loadSimpleText()
-    const prompt = question.mode === 'ayah' ? ayahPrompt!.shown : 0
+    const plainText = await loadSimpleText()
+    setSimple(plainText)
+    const promptWords = prompt?.shown ?? 0
     const target = question.reveal
     const lastTarget = target[target.length - 1]!
     const surahEnd = quran.surahRange(quran.surahOf(lastTarget).n)[1]
@@ -238,25 +327,25 @@ function QuizSession({ request }: { request: QuizRequest }) {
       (_, k) => lastTarget + 1 + k,
     )
     const text = (i: number) => quran.text(i)
-    const plain = (i: number) => simple[i]!
+    const plain = (i: number) => plainText[i]!
     setRecite({
-      expected: buildExpected([...target, ...following], text, plain, prompt),
-      prompt,
-      targetCount: buildExpected(target, text, plain, prompt).length,
+      expected: buildExpected([...target, ...following], text, plain, promptWords),
+      prompt: promptWords,
+      targetCount: buildExpected(target, text, plain, promptWords).length,
     })
-  }, [question, speech, ayahPrompt, quran])
+  }, [question, speech, prompt, quran])
 
   // In voice mode, start listening by itself when the next question comes up.
   const autoStarted = useRef(-1)
   useEffect(() => {
-    if (!voice || !question || question.mode === 'name' || autoStarted.current === pos) return
+    if (!voice || !recitable || autoStarted.current === pos) return
     if (recite || listening) return
     const id = window.setTimeout(() => {
       autoStarted.current = pos
       void startListening()
     }, 0)
     return () => window.clearTimeout(id)
-  }, [voice, question, pos, recite, listening, startListening])
+  }, [voice, recitable, pos, recite, listening, startListening])
 
   const revealNow = () => {
     speech.stop()
@@ -267,7 +356,7 @@ function QuizSession({ request }: { request: QuizRequest }) {
   if (suggested === 'perfect' && usedWordHint) suggested = 'hesitated'
 
   /** Next question in voice mode: grades are taken from what was heard. */
-  const nextQuestion = () => void advance(suggested ?? 'missed', true, continuation)
+  const nextQuestion = () => void advance(suggested ?? 'missed', true, continuation, pairs)
 
   const chooseQuarter = async (c: number | 'unknown') => {
     if (question?.mode !== 'name' || choice !== null) return
@@ -280,9 +369,26 @@ function QuizSession({ request }: { request: QuizRequest }) {
     }
   }
 
+  const checkPlace = async (s: Spot | 'unknown') => {
+    if (question?.mode !== 'place' || placed) return
+    const raw: Grade3 = s === 'unknown' ? 'missed' : layout.grade(question.index, s)
+    // Seeing the surah titles is a hint: the best it can be is Almost.
+    const g: Grade3 = raw === 'perfect' && hintShown ? 'hesitated' : raw
+    setPlaced({ raw, grade: g })
+    setBusy(true)
+    try {
+      await recordAnswer(question.itemId, g, 'place')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const nextAfterChoice = () => {
-    if (question?.mode !== 'name' || choice === null) return
-    const g: Grade3 = choice === question.quarter ? 'perfect' : 'missed'
+    if (!question) return
+    let g: Grade3
+    if (question.mode === 'name' && choice !== null) g = choice === question.quarter ? 'perfect' : 'missed'
+    else if (question.mode === 'place' && placed) g = placed.grade
+    else return
     setResults((r) => [...r, { itemId: question.itemId, grade: g }])
     if (g === 'perfect') setBurst((b) => b + 1)
     if (g === 'missed' && !requeued.has(question.itemId)) {
@@ -295,6 +401,9 @@ function QuizSession({ request }: { request: QuizRequest }) {
     }
     setPos((p) => p + 1)
     setChoice(null)
+    setSpot(null)
+    setPlaced(null)
+    setHintShown(false)
   }
 
   // Keyboard: Space/Enter reveals, H shows another word, 1–3 grade.
@@ -303,10 +412,14 @@ function QuizSession({ request }: { request: QuizRequest }) {
       if (!question || e.metaKey || e.ctrlKey || e.altKey) return
       const target = e.target as HTMLElement
       if (target.closest('button, input, select, textarea, a, dialog')) return
-      if (question.mode === 'name') {
-        if (choice !== null && (e.key === 'Enter' || e.key === ' ')) {
+      if (question.mode === 'name' || question.mode === 'place') {
+        const answered = question.mode === 'name' ? choice !== null : placed !== null
+        if (answered && (e.key === 'Enter' || e.key === ' ')) {
           e.preventDefault()
           nextAfterChoice()
+        } else if (question.mode === 'place' && !answered && spot && e.key === 'Enter') {
+          e.preventDefault()
+          void checkPlace(spot)
         }
         return
       }
@@ -316,7 +429,7 @@ function QuizSession({ request }: { request: QuizRequest }) {
       } else if (!revealed && (e.key === ' ' || e.key === 'Enter')) {
         e.preventDefault()
         revealNow()
-      } else if (!revealed && question.mode === 'ayah' && e.key.toLowerCase() === 'h') {
+      } else if (!revealed && prompt && e.key.toLowerCase() === 'h') {
         setExtraWords((n) => n + 1)
       } else if (revealed && ['1', '2', '3'].includes(e.key)) {
         const g = (['missed', 'hesitated', 'perfect'] as const)[Number(e.key) - 1]!
@@ -365,7 +478,28 @@ function QuizSession({ request }: { request: QuizRequest }) {
 
   let ask = ''
   let board: ReactNode = null
+  let afterBoard: ReactNode = null
   let hints: ReactNode = null
+  const wordHint = (
+    <button
+      type="button"
+      className="btn"
+      disabled={!prompt || prompt.total - prompt.shown <= 0}
+      onClick={() => setExtraWords((n) => n + 1)}
+    >
+      {t.quiz.nextWord}
+    </button>
+  )
+  const recitationBoard = (target: readonly number[], basmala = false) =>
+    recite && followed ? (
+      <RecitationBoard
+        {...boardView(target)}
+        expected={recite.expected}
+        result={followed}
+        complete={revealed}
+        basmala={basmala}
+      />
+    ) : null
 
   switch (question.mode) {
     case 'ayah': {
@@ -389,16 +523,16 @@ function QuizSession({ request }: { request: QuizRequest }) {
             </>
           ) : revealed ? (
             <>
-              <Ayahs indices={question.reveal} alreadyShown={ayahPrompt!.shown} animate />
+              <Ayahs indices={question.reveal} alreadyShown={prompt!.shown} animate />
               {where(question.index)}
             </>
           ) : (
-            <PromptWords index={question.index} shown={ayahPrompt!.shown} />
+            <PromptWords index={question.index} shown={prompt!.shown} />
           )}
         </>
       )
       if (!revealed && !recite) {
-        const hidden = ayahPrompt!.total - ayahPrompt!.shown
+        const hidden = prompt!.total - prompt!.shown
         hints = (
           <>
             <button type="button" className="btn" disabled={hidden <= 0} onClick={() => setExtraWords((n) => n + 1)}>
@@ -490,6 +624,91 @@ function QuizSession({ request }: { request: QuizRequest }) {
       }
       break
     }
+    case 'meaning': {
+      ask = t.quiz.meaning.ask
+      const meaning = translation?.ayahs[question.index]
+      board = (
+        <>
+          <p className="lawh__label">{i18n.surahName(quran.surahOf(question.index))}</p>
+          <div className="meaning">
+            <p className="meaning__label">{t.quiz.meaning.label}</p>
+            <p className="meaning__text" lang="en" dir="ltr">
+              {meaning ?? (translationFailed ? t.quiz.meaning.failed : t.quiz.meaning.loading)}
+            </p>
+          </div>
+          {recitationBoard(question.reveal) ??
+            (revealed ? (
+              <Ayahs indices={question.reveal} alreadyShown={prompt!.shown} animate />
+            ) : (
+              prompt!.shown > 0 && <PromptWords index={question.index} shown={prompt!.shown} />
+            ))}
+          {revealed && where(question.index)}
+          {translation && <p className="meaning__credit">{t.quiz.meaning.credit(translation.name)}</p>}
+        </>
+      )
+      if (!revealed && !recite) hints = wordHint
+      break
+    }
+    case 'pair': {
+      ask = t.quiz.pair.ask
+      const otherRef = verseLabel(i18n, quran, question.other)
+      board = (
+        <>
+          <p className="lawh__label">{i18n.surahName(quran.surahOf(question.index))}</p>
+          {!revealed && <p className="note">{t.quiz.pair.lookAlike(otherRef)}</p>}
+          {recitationBoard(question.reveal) ??
+            (revealed ? (
+              <Ayahs
+                indices={question.reveal}
+                alreadyShown={prompt!.shown}
+                animate
+                marked={(_, w) => pairDiff?.a[w] ?? false}
+              />
+            ) : (
+              <PromptWords index={question.index} shown={prompt!.shown} />
+            ))}
+          {revealed && where(question.index)}
+          {revealed && (
+            <div className="pair-other">
+              <p className="lawh__label">{t.quiz.pair.other(otherRef)}</p>
+              <Ayahs indices={[question.other]} className="quran--context" marked={(_, w) => pairDiff?.b[w] ?? false} />
+              <p className="note">{t.quiz.pair.diffNote}</p>
+            </div>
+          )}
+        </>
+      )
+      if (!revealed && !recite) hints = wordHint
+      break
+    }
+    case 'place': {
+      ask = t.quiz.place.ask
+      board = (
+        <>
+          <p className="lawh__label">{i18n.surahName(quran.surahOf(question.index))}</p>
+          <p className="quran" lang="ar" dir="rtl" translate="no">
+            {openingText(quran.text(question.index), 10)}
+          </p>
+          {placed && where(question.index)}
+        </>
+      )
+      afterBoard = (
+        <PageSpread
+          index={question.index}
+          picked={spot}
+          onPick={placed ? undefined : setSpot}
+          showShape={hintShown}
+          answer={placed !== null}
+        />
+      )
+      if (!placed && !hintShown) {
+        hints = (
+          <button type="button" className="btn" onClick={() => setHintShown(true)}>
+            {t.quiz.place.showShape}
+          </button>
+        )
+      }
+      break
+    }
     case 'name': {
       ask = t.quiz.whichRub
       const first = quran.quarterStart(question.quarter)
@@ -510,6 +729,27 @@ function QuizSession({ request }: { request: QuizRequest }) {
   }
 
   const right = question.mode === 'name' && choice === question.quarter
+
+  /** Where the ayah of a page question really begins, for the verdict. */
+  const placeVerdict = () => {
+    if (question.mode !== 'place' || !placed) return null
+    const page = layout.quran.pageOf(question.index)
+    const side = isRightPage(page) ? 'right' : 'left'
+    const line = num(layout.firstLine(question.index))
+    const text =
+      placed.raw === 'perfect'
+        ? t.quiz.place.exact
+        : placed.raw === 'hesitated'
+          ? t.quiz.place.close(side, line)
+          : t.quiz.place.wrong(side, line)
+    const cls =
+      placed.raw === 'perfect' ? 'verdict--right' : placed.raw === 'hesitated' ? 'verdict--near' : 'verdict--wrong'
+    return (
+      <p className={`verdict ${cls}`} role="status">
+        {text}
+      </p>
+    )
+  }
 
   return (
     <div className="quiz">
@@ -542,10 +782,46 @@ function QuizSession({ request }: { request: QuizRequest }) {
         {board}
       </div>
 
+      {afterBoard}
+
+      <Mixups mixups={mixups} simple={simple} onDismiss={(a) => setDismissed((d) => new Set(d).add(a))} />
+
       {hints && <div className="quiz__hints">{hints}</div>}
 
       <div className="quiz__actions">
-        {question.mode === 'name' ? (
+        {question.mode === 'place' ? (
+          placed === null ? (
+            <>
+              {hintShown && <p className="note">{t.quiz.hintCap}</p>}
+              <p className="note">{t.quiz.place.tap}</p>
+              <div className="listen-row">
+                <button type="button" className="btn btn--large" onClick={() => void checkPlace('unknown')}>
+                  {t.quiz.dontKnow}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--primary btn--large btn--block"
+                  disabled={!spot || busy}
+                  onClick={() => spot && void checkPlace(spot)}
+                >
+                  {t.quiz.place.check}
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              {placeVerdict()}
+              <button
+                type="button"
+                className="btn btn--primary btn--large btn--block"
+                onClick={nextAfterChoice}
+                autoFocus
+              >
+                {t.quiz.next}
+              </button>
+            </>
+          )
+        ) : question.mode === 'name' ? (
           choice === null ? (
             <>
               <div className="choices">

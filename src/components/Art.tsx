@@ -53,6 +53,32 @@ export function ModeIcon({ mode }: { mode: Mode }) {
           <rect {...line} x="14" y="11" width="14" height="10" rx="5" />
         </svg>
       )
+    // A page of lines with one marked: where on the page.
+    case 'place':
+      return (
+        <svg viewBox="0 0 32 32" aria-hidden="true">
+          <rect {...line} x="7" y="4" width="18" height="24" rx="2.5" />
+          <path {...line} d="M11 9.5h10M11 13.5h10M11 21.5h10M11 25h6" />
+          <rect x="9.5" y="16" width="13" height="3" rx="1.5" fill="currentColor" />
+        </svg>
+      )
+    // A speech bubble with lines: from the meaning.
+    case 'meaning':
+      return (
+        <svg viewBox="0 0 32 32" aria-hidden="true">
+          <path {...line} d="M6 7h20a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H14l-6 5v-5H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z" />
+          <path {...line} d="M9.5 12.5h13M9.5 16.5h8" />
+        </svg>
+      )
+    // Two cards, one over the other: similar ayahs.
+    case 'pair':
+      return (
+        <svg viewBox="0 0 32 32" aria-hidden="true">
+          <rect {...line} x="4" y="6" width="17" height="13" rx="2.5" />
+          <rect {...line} x="11" y="13" width="17" height="13" rx="2.5" fill="var(--tile-bg, transparent)" />
+          <path {...line} d="M15 18h9M15 21.5h5" />
+        </svg>
+      )
   }
 }
 

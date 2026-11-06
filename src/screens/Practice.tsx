@@ -34,8 +34,8 @@ export function Practice() {
   const part = from >= 0 ? memorized[from] : undefined
   const scope: Scope = useMemo(() => (part ? [part] : memorized), [part, memorized])
   const items = useMemo(
-    () => itemsInScope(settings.mode, scopeMask(scope, quran), quran),
-    [settings.mode, scope, quran],
+    () => itemsInScope(settings.mode, scopeMask(scope, quran), quran, states.keys()),
+    [settings.mode, scope, quran, states],
   )
   const due = useMemo(() => {
     return items.filter((id) => {
@@ -43,6 +43,11 @@ export function Practice() {
       return s !== undefined && isDue(s, now)
     }).length
   }, [items, states, now])
+
+  const pairCount = useMemo(
+    () => itemsInScope('pair', memorizedMask, quran, states.keys()).length,
+    [memorizedMask, quran, states],
+  )
 
   if (memorized.length === 0) {
     return (
@@ -94,12 +99,21 @@ export function Practice() {
               <ModeIcon mode={m} />
               <span className="mode-tile__title">{t.modes[m].title}</span>
               <span className="mode-tile__body">{t.modes[m].body}</span>
+              {m === 'pair' && pairCount > 0 && (
+                <span className="mode-tile__badge">{t.setup.pairs(pairCount, num(pairCount))}</span>
+              )}
               <span className="mode-tile__check" aria-hidden="true">
                 ✓
               </span>
             </label>
           ))}
         </div>
+        {settings.mode === 'place' && (
+          <p className="muted small">
+            {t.setup.printNote(i18n.year(Number(settings.mushaf)))}{' '}
+            <Link to="/settings#mushaf">{t.setup.changePrint}</Link>
+          </p>
+        )}
       </section>
 
       <section className="section">
@@ -132,7 +146,13 @@ export function Practice() {
 
       <section className="section">
         {items.length === 0 ? (
-          <p className="muted">{settings.mode === 'link' ? t.setup.nothingLink : t.setup.nothing}</p>
+          <p className="muted">
+            {settings.mode === 'link'
+              ? t.setup.nothingLink
+              : settings.mode === 'pair'
+                ? t.setup.nothingPair
+                : t.setup.nothing}
+          </p>
         ) : (
           <p className="muted small">
             {t.setup.available(items.length, num(items.length))}

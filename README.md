@@ -37,6 +37,16 @@ The design aims to be calm and easy for anyone, children included: large buttons
 | **Start of a rub'** (أول الربع) | A quarter by name, e.g. *½ Hizb 27* | Recite how it begins |
 | **Name the rub'** (سمِّ الربع) | How a quarter begins | Pick which quarter it is (checked automatically) |
 | **Link the quarters** (ربط الأرباع) | The last ayah of a quarter | Recite how the next quarter begins |
+| **Where on the page?** (أين في الصفحة؟) | An ayah, beside a drawing of the open mushaf | Tap the line it begins on (checked automatically) |
+| **From the meaning** (من المعنى) | What an ayah means, in English | Recite the ayah in Arabic |
+| **Tell them apart** (المتشابهات) | The opening of an ayah you once drifted out of, and the ayah you drifted into | Recite the right one, then see where the two differ |
+
+<p align="center">
+  <img src="docs/screenshots/place.png" width="220" alt="The page quiz: the open mushaf drawn as its lines, with the right line marked after answering" />
+</p>
+
+- **Where on the page.** Many huffaz remember an ayah by where it sits on the page. This mode draws the open Madinah mushaf, odd page on the right, fifteen lines each, and asks you to tap the line an ayah begins on. The first line of the ayah is Perfect; another line of it, or two lines off, is Almost. The surah titles can be shown as a hint. Prints of the Madinah mushaf differ (page 121 starts at Al-Mā'idah 77 in the 1405 AH print and at 78 in the 1421 AH print and later), so you choose yours in Settings, and the page numbers throughout the app follow it.
+- **Similar ayahs from your own slips.** When you recite aloud and drift into another ayah (from Al-Baqara 58 into the wording of Al-A'raf 161, say), the app looks up what you said in the whole Qur'an and tells you where you went, with the two ayahs side by side and the differing words coloured. The pair is saved to **Tell them apart**, so you practise exactly the look-alikes you confuse, not a fixed list. If it misheard, tap **Not a mix-up**.
 
 - **Only what you've memorized.** Choose by juz, hizb, surah or any ayah range, and questions only come from there.
 - **Weakest first.** Every ayah and quarter has its own memory strength (the [FSRS](https://github.com/open-spaced-repetition/ts-fsrs) algorithm). Missed items come back later in the same session and sooner in future ones.
@@ -55,7 +65,7 @@ The design aims to be calm and easy for anyone, children included: large buttons
 
 The text is the [Tanzil Project](https://tanzil.net)'s verified **Uthmani text, riwayat Hafs**, used unchanged and displayed in the Amiri Quran typeface.
 
-The reader follows the page divisions of the Madani mushaf (604 pages). The text flows within each page rather than reproducing the printed line breaks.
+The reader follows the page divisions of the Madani mushaf (604 pages), in the print you choose in Settings. The text flows within each page rather than reproducing the printed line breaks; where each ayah sits on the printed lines is used by the page quiz.
 
 Reciting aloud is matched against Tanzil's **plain-spelling text** (Simple Clean), because speech recognition writes modern spelling (الصلاة) rather than Uthmani (ٱلصَّلَوٰةَ). Each plain word is aligned to its Uthmani word for display; all 6,236 ayahs align cleanly (`tests/recitation.test.ts`).
 
@@ -82,8 +92,8 @@ This runs the app without accounts; everything is stored in your browser. To tur
 | `npm test` | Unit tests: data checks, quiz engine, storage, sync and the database migration |
 | `npm run test:e2e` | End-to-end tests in Chromium at phone and desktop sizes |
 | `npm run check` | Typecheck, lint, formatting and unit tests together |
-| `npm run data:fetch` | Download the latest Tanzil files into `data/tanzil/` |
-| `npm run data:build` | Rebuild `src/data/quran-hafs.json` and the translations from them |
+| `npm run data:fetch` | Download the latest Tanzil files into `data/tanzil/` and the page layout into `data/qurancom/` |
+| `npm run data:build` | Rebuild `src/data/quran-hafs.json`, the translations and the page layout from them |
 | `npm run data:check` | Re-check boundaries against quran.com |
 
 ## Deploying

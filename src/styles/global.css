@@ -575,6 +575,70 @@ select {
   --tile-bg: var(--rose);
   --tile-ink: var(--rose-ink);
 }
+.mode-tile[data-mode='place'] {
+  --tile-bg: var(--lilac);
+  --tile-ink: var(--lilac-ink);
+}
+.mode-tile[data-mode='meaning'] {
+  --tile-bg: var(--iris);
+  --tile-ink: var(--iris-ink);
+}
+.mode-tile[data-mode='pair'] {
+  --tile-bg: var(--orchid);
+  --tile-ink: var(--orchid-ink);
+}
+
+.mode-tile__badge {
+  align-self: flex-start;
+  margin-top: 0.15rem;
+  padding: 0.05rem 0.55rem;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--tile-ink);
+  font-size: var(--step--1);
+  font-weight: 650;
+}
+
+/* A list of longer choices, one per row (Settings: your mushaf). */
+.choice-list {
+  display: grid;
+  gap: 0.4rem;
+  scroll-margin-top: 5rem;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.choice-list legend {
+  padding: 0;
+  margin-bottom: 0.2rem;
+  font-weight: 600;
+}
+
+.choice-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 48px;
+  padding: 0.55rem 0.9rem;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.choice-row:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.choice-row input {
+  accent-color: var(--accent);
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  flex: none;
+}
 
 @media (max-width: 22rem) {
   .mode-grid {
@@ -780,7 +844,8 @@ select {
   flex-direction: column;
   gap: 0.6rem;
   position: sticky;
-  bottom: calc(var(--nav-h) + 0.75rem + env(safe-area-inset-bottom));
+  /* The navigation is hidden during a quiz, so this sits at the bottom of the screen. */
+  bottom: calc(0.75rem + env(safe-area-inset-bottom));
   padding-top: 0.75rem;
   background: linear-gradient(to bottom, transparent, var(--paper) 30%);
 }
@@ -883,6 +948,9 @@ select {
 
 .verdict--right {
   color: var(--right);
+}
+.verdict--near {
+  color: var(--accent);
 }
 .verdict--wrong {
   color: var(--wrong);
@@ -1998,4 +2066,208 @@ a.surah-row {
 }
 .dot--bad {
   background: var(--wrong);
+}
+
+/* ---------- Where on the page ---------- */
+
+/* An open mushaf drawn as its lines: odd page on the right. */
+.spread {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  padding: 0.5rem;
+  border-radius: 18px;
+  background: var(--clay);
+  box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--clay-edge) 35%, transparent);
+}
+
+.spread__page {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  padding: 0.45rem 0.5rem 1.2rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+/* The fold between the pages. */
+.spread__page:first-child {
+  border-radius: 4px 12px 12px 4px;
+  box-shadow: inset 6px 0 8px -6px color-mix(in srgb, var(--clay-edge) 40%, transparent);
+}
+.spread__page:last-child {
+  border-radius: 12px 4px 4px 12px;
+  box-shadow: inset -6px 0 8px -6px color-mix(in srgb, var(--clay-edge) 40%, transparent);
+}
+
+.spread__line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 14px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.spread__line > span {
+  display: block;
+  width: 100%;
+  height: 5px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--ink-3) 30%, transparent);
+  transition:
+    background 120ms ease,
+    height 120ms ease;
+}
+
+button.spread__line:hover > span {
+  background: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+button.spread__line:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.spread__line--header > span {
+  width: 92%;
+  height: 11px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1.5px solid var(--clay-edge);
+}
+
+.spread__line--basmala > span {
+  width: 55%;
+  background: color-mix(in srgb, var(--clay-edge) 45%, transparent);
+}
+
+button.spread__line:disabled {
+  cursor: default;
+}
+
+.spread__line--picked > span {
+  height: 9px;
+  background: var(--ink-2);
+}
+
+.spread__line--target > span {
+  height: 9px;
+  background: color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+.spread__line--start > span {
+  background: var(--accent);
+}
+
+.spread__line--picked.spread__line--start > span {
+  background: var(--accent);
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 4px var(--accent);
+}
+
+/* After answering, the tap that missed stays visible in berry rose. */
+.spread--answer .spread__line--picked:not(.spread__line--target) > span {
+  background: var(--wrong);
+}
+
+.spread__num {
+  position: absolute;
+  bottom: 0.25rem;
+  inset-inline: 0;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- From the meaning ---------- */
+
+.meaning {
+  display: grid;
+  gap: 0.3rem;
+  margin-bottom: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  background: var(--surface);
+  text-align: start;
+}
+
+.meaning__label {
+  font-size: var(--step--1);
+  color: var(--ink-3);
+  font-weight: 600;
+}
+
+.meaning__text {
+  font-size: 1.125rem;
+  line-height: 1.55;
+  color: var(--ink);
+  text-align: left;
+}
+
+.meaning__credit {
+  margin-top: 0.6rem;
+  font-size: 0.75rem;
+  color: var(--ink-3);
+  text-align: center;
+}
+
+/* ---------- Similar ayahs ---------- */
+
+.word--diff {
+  /* A highlighter stroke low on the word, lighter than a box around the tall Qur'an glyphs. */
+  color: var(--orchid-ink);
+  background: linear-gradient(
+    to top,
+    transparent 18%,
+    color-mix(in srgb, var(--orchid-ink) 16%, transparent) 18% 42%,
+    transparent 42%
+  );
+  box-decoration-break: clone;
+}
+
+.pair-other {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed color-mix(in srgb, var(--clay-edge) 45%, transparent);
+}
+
+.mixup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 0.75rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--radius);
+  background: var(--orchid);
+  color: var(--orchid-ink);
+  font-weight: 600;
+}
+
+.mixup__actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.compare {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.compare__label {
+  font-size: var(--step--1);
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
+.compare .quran {
+  font-size: calc(var(--quran-size) * 0.85);
 }

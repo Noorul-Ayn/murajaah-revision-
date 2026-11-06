@@ -138,11 +138,16 @@ export function Progress() {
 
   function details(p: QuarterProgress) {
     const [first, last] = quran.quarterRange(p.quarter)
+    const range = scopeMask([{ kind: 'range', from: first, to: last }], quran)
+    const count = (m: Mode) => itemsInScope(m, range, quran, states.keys()).length
     const perMode: Record<Mode, number> = {
-      ayah: itemsInScope('ayah', scopeMask([{ kind: 'range', from: first, to: last }], quran), quran).length,
+      ayah: count('ayah'),
       open: 1,
       name: 1,
       link: p.quarter > 1 ? 1 : 0,
+      place: count('place'),
+      meaning: count('meaning'),
+      pair: count('pair'),
     }
     const possible = filter === 'all' ? MODES.reduce((n, m) => n + perMode[m], 0) : perMode[filter]
     return (

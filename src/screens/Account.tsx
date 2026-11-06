@@ -10,7 +10,7 @@ const message = (e: unknown) => (e instanceof Error ? e.message : String(e))
 
 export function Account() {
   const sync = useSync()
-  const { t, relativeTime } = useI18n()
+  const { t, num, relativeTime } = useI18n()
   const toast = useToast()
   const [email, setEmail] = useState('')
   const [sentTo, setSentTo] = useState<string | null>(null)
@@ -100,6 +100,11 @@ export function Account() {
             <span className={`dot ${statusLine.dot}`} aria-hidden="true" />
             {statusLine.text}
           </p>
+          {status.kind === 'synced' && status.held ? (
+            <p className="note" style={{ textAlign: 'start' }}>
+              {t.account.held(status.held, num(status.held))}
+            </p>
+          ) : null}
           <div className="row" style={{ justifyContent: 'flex-start' }}>
             <button
               type="button"

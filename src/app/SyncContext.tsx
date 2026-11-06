@@ -18,7 +18,7 @@ import { useApp } from './AppContext'
 export type SyncStatus =
   | { kind: 'idle' }
   | { kind: 'syncing' }
-  | { kind: 'synced'; at: number }
+  | { kind: 'synced'; at: number; held?: number }
   | { kind: 'offline' }
   | { kind: 'error'; message: string }
 
@@ -102,9 +102,11 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     const job = (async () => {
       setStatus({ kind: 'syncing' })
       try {
+        let held = 0
         do {
           again.current = false
           const result = await syncNow(supabase, userId)
+          held = result.held ?? 0
           if (result.settings) appRef.current.replaceSettings(result.settings)
           if (result.pulled > 0) await appRef.current.reloadProgress()
           try {
@@ -116,7 +118,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         } while (again.current)
         const at = Date.now()
         await setKv('lastSync', at)
-        setStatus({ kind: 'synced', at })
+        setStatus(held ? { kind: 'synced', at, held } : { kind: 'synced', at })
       } catch (e) {
         setStatus(navigator.onLine ? { kind: 'error', message: errorMessage(e) } : { kind: 'offline' })
       } finally {

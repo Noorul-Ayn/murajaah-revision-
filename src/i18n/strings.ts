@@ -2,6 +2,7 @@ import type { Mode } from '../lib/items'
 import type { Order } from '../lib/session'
 import type { Strength, Grade3 } from '../lib/srs'
 import type { TextSize, Theme } from '../lib/settings'
+import type { Print } from '../lib/layout'
 
 /**
  * Interface text. English defines the shape; Arabic must provide every key.
@@ -95,6 +96,9 @@ const en = {
     open: { title: 'Start of a rub’', body: 'You see a rub’ by its name and recite how it begins.' },
     name: { title: 'Name the rub’', body: 'You see how a rub’ begins and pick which one it is.' },
     link: { title: 'Link the quarters', body: 'You see the last ayah of a rub’ and recite how the next one begins.' },
+    place: { title: 'Where on the page?', body: 'You see an ayah and tap where it begins on the open mushaf.' },
+    meaning: { title: 'From the meaning', body: 'You see what an ayah means in English and recite it in Arabic.' },
+    pair: { title: 'Tell them apart', body: 'Similar ayahs you mixed up while reciting aloud.' },
   } satisfies Record<Mode, { title: string; body: string }>,
 
   setup: {
@@ -109,6 +113,11 @@ const en = {
     available: enPlural('1 to choose from', '{n} to choose from'),
     nothing: 'There’s nothing to ask from this range in this mode.',
     nothingLink: 'Linking needs two neighbouring rub’s that you’ve memorized.',
+    nothingPair:
+      'No pairs yet. Recite aloud in any quiz: when you drift into a similar ayah, the two are saved here to practise.',
+    pairs: enPlural('1 pair', '{n} pairs'),
+    printNote: (print: string) => `Pages and lines follow your mushaf: Madinah, ${print} AH print.`,
+    changePrint: 'Change',
   },
 
   quiz: {
@@ -132,6 +141,45 @@ const en = {
     itWas: (label: string) => `It was ${label}.`,
     next: 'Next',
     keys: 'Space shows the answer. 1, 2 and 3 grade it.',
+    place: {
+      ask: 'Where does this ayah begin?',
+      tap: 'Tap its line in the open mushaf, then check.',
+      side: { right: 'Right page', left: 'Left page' },
+      line: (side: 'right' | 'left', n: string) => `${side === 'right' ? 'Right' : 'Left'} page, line ${n}`,
+      check: 'Check',
+      showShape: 'Show the surah titles',
+      exact: 'Exactly there!',
+      close: (side: 'right' | 'left', n: string) => `Close. It begins on the ${side} page, line ${n}.`,
+      wrong: (side: 'right' | 'left', n: string) => `It begins on the ${side} page, line ${n}.`,
+      pages: (right: string, left: string) => `Pages ${right} and ${left}`,
+      header: 'Surah title',
+      basmala: 'Basmala',
+      yours: 'Your answer',
+    },
+    meaning: {
+      ask: 'Recite the ayah with this meaning',
+      label: 'Meaning in English',
+      loading: 'Loading the meaning…',
+      failed: 'The meaning couldn’t be loaded. Check your connection and try again.',
+      credit: (name: string) => `Translation: ${name}. A translation conveys the meaning; it is not the Qur’an itself.`,
+    },
+    pair: {
+      ask: 'Continue this ayah, not its look-alike',
+      lookAlike: (ref: string) => `Looks like ${ref}`,
+      other: (ref: string) => `The similar ayah, ${ref}`,
+      diffNote: 'Coloured words are where the two differ.',
+    },
+  },
+
+  mixup: {
+    wentInto: (ref: string) => `That was ${ref}.`,
+    compare: 'Compare',
+    dismiss: 'Not a mix-up',
+    title: 'Two similar ayahs',
+    reciting: (ref: string) => `You were reciting ${ref}`,
+    went: (ref: string) => `and went into ${ref}`,
+    saved: 'When you move on, the two are saved to Tell them apart, to practise until you no longer mix them up.',
+    close: 'Close',
   },
 
   listen: {
@@ -314,6 +362,13 @@ const en = {
     listenSound: 'Warning sound on a slip',
     listenVibrate: 'Vibrate on a slip',
     reading: 'Reading the mushaf',
+    mushaf: 'Your mushaf',
+    mushafHint:
+      'Prints of the Madinah mushaf differ in where some pages and lines begin. Open yours at page 121 to see which one you have. Page numbers and the page quiz follow it.',
+    prints: {
+      1405: 'Page 121 starts at Al-Mā’idah 77 (1405 AH print)',
+      1421: 'Page 121 starts at Al-Mā’idah 78 (1421 AH print and later)',
+    } satisfies Record<Print, string>,
     translationChoice: 'English translation',
     ayahMode: 'Continue the ayah',
     promptWords: 'Words shown at the start',
@@ -333,7 +388,7 @@ const en = {
     resetDone: 'Progress on this device was deleted.',
     about: 'About',
     aboutBody:
-      'Murajaah is free and open source. The Qur’an text is the Tanzil Project’s verified Uthmani text (Hafs), used unchanged. Rub’, juz and page boundaries are checked against the in-text rub’ signs and quran.com. English translations are from Tanzil: Saheeh International (for non-commercial use) and Pickthall (public domain). A translation conveys meaning and is not the Qur’an itself.',
+      'Murajaah is free and open source. The Qur’an text is the Tanzil Project’s verified Uthmani text (Hafs), used unchanged. Rub’, juz and page boundaries are checked against the in-text rub’ signs and quran.com. English translations are from Tanzil: Saheeh International (for non-commercial use) and Pickthall (public domain). A translation conveys meaning and is not the Qur’an itself. Where each ayah sits on the page, in the 1405 AH and 1421 AH Madinah prints, is from the Quran.com API.',
     tanzil: 'Tanzil Project',
     source: 'Source code',
     version: (v: string) => `Version ${v}`,
@@ -343,6 +398,10 @@ const en = {
 
   account: {
     title: 'Account and sync',
+    held: enPlural(
+      '1 answer from the newer practice modes is kept on this device: the database needs its latest update (step 5 of the setup guide) before it can sync.',
+      '{n} answers from the newer practice modes are kept on this device: the database needs its latest update (step 5 of the setup guide) before they can sync.',
+    ),
     pitch: 'Sign in to keep your progress in sync across your devices. Without an account, it stays on this device.',
     email: 'Email',
     sendCode: 'Email me a sign-in link',
@@ -464,6 +523,9 @@ const ar: Strings = {
     open: { title: 'أول الربع', body: 'يظهر لك اسم الربع فتتلو أوله.' },
     name: { title: 'سمِّ الربع', body: 'يظهر لك أول الربع فتختار أيّ ربع هو.' },
     link: { title: 'ربط الأرباع', body: 'تظهر لك آخر آية في الربع فتتلو أول الربع الذي يليه.' },
+    place: { title: 'أين في الصفحة؟', body: 'تظهر لك آية فتختار موضع بدايتها في المصحف المفتوح.' },
+    meaning: { title: 'من المعنى', body: 'يظهر لك معنى آية بالإنجليزية فتتلوها بالعربية.' },
+    pair: { title: 'المتشابهات', body: 'آيات متشابهة خلطت بينها أثناء التسميع بصوتك.' },
   },
 
   setup: {
@@ -496,6 +558,17 @@ const ar: Strings = {
     }),
     nothing: 'لا توجد أسئلة من هذا النطاق في هذا النوع.',
     nothingLink: 'الربط يحتاج ربعين متتاليين من محفوظك.',
+    nothingPair:
+      'لا توجد متشابهات بعد. سمّع بصوتك في أي اختبار، وإذا انتقلت إلى آية تشبه التي تتلوها حُفظت الآيتان هنا لتتدرّب عليهما.',
+    pairs: arPlural({
+      one: 'زوج واحد',
+      two: 'زوجان',
+      few: '{n} أزواج',
+      many: '{n} زوجًا',
+      other: '{n} زوج',
+    }),
+    printNote: (print) => `الصفحات والأسطر حسب مصحفك: مصحف المدينة، طبعة ${print}هـ.`,
+    changePrint: 'غيّر',
   },
 
   quiz: {
@@ -531,6 +604,45 @@ const ar: Strings = {
     itWas: (label) => `الصواب: ${label}.`,
     next: 'التالي',
     keys: 'المسافة تُظهر الجواب، و١ و٢ و٣ للتقييم.',
+    place: {
+      ask: 'أين تبدأ هذه الآية؟',
+      tap: 'اختر سطرها في المصحف المفتوح، ثم تحقّق.',
+      side: { right: 'الصفحة اليمنى', left: 'الصفحة اليسرى' },
+      line: (side, n) => `${side === 'right' ? 'الصفحة اليمنى' : 'الصفحة اليسرى'}، السطر ${n}`,
+      check: 'تحقّق',
+      showShape: 'أظهر عناوين السور',
+      exact: 'في موضعها تمامًا!',
+      close: (side, n) => `قريب. تبدأ في ${side === 'right' ? 'الصفحة اليمنى' : 'الصفحة اليسرى'}، السطر ${n}.`,
+      wrong: (side, n) => `تبدأ في ${side === 'right' ? 'الصفحة اليمنى' : 'الصفحة اليسرى'}، السطر ${n}.`,
+      pages: (right, left) => `الصفحتان ${right} و${left}`,
+      header: 'عنوان السورة',
+      basmala: 'البسملة',
+      yours: 'إجابتك',
+    },
+    meaning: {
+      ask: 'اتلُ الآية التي هذا معناها',
+      label: 'المعنى بالإنجليزية',
+      loading: 'جارٍ تحميل المعنى…',
+      failed: 'تعذّر تحميل المعنى. تحقّق من الاتصال وحاول مجددًا.',
+      credit: (name) => `الترجمة: ${name}. والترجمة بيان للمعنى وليست قرآنًا.`,
+    },
+    pair: {
+      ask: 'أكمل الآية، لا شبيهتها',
+      lookAlike: (ref) => `تشبه ${ref}`,
+      other: (ref) => `الآية المشابهة: ${ref}`,
+      diffNote: 'الكلمات الملوّنة مواضع الاختلاف بينهما.',
+    },
+  },
+
+  mixup: {
+    wentInto: (ref) => `هذه من ${ref}.`,
+    compare: 'قارن',
+    dismiss: 'ليس خلطًا',
+    title: 'آيتان متشابهتان',
+    reciting: (ref) => `كنت تتلو ${ref}`,
+    went: (ref) => `فانتقلت إلى ${ref}`,
+    saved: 'عند انتقالك تُحفظ الآيتان في «المتشابهات» لتتدرّب عليهما حتى لا تخلط بينهما.',
+    close: 'إغلاق',
   },
 
   listen: {
@@ -711,6 +823,13 @@ const ar: Strings = {
     listenSound: 'صوت تنبيه عند الخطأ',
     listenVibrate: 'اهتزاز عند الخطأ',
     reading: 'قراءة المصحف',
+    mushaf: 'مصحفك',
+    mushafHint:
+      'تختلف طبعات مصحف المدينة في بداية بعض الصفحات والأسطر. افتح مصحفك على صفحة ١٢١ لتعرف طبعتك. أرقام الصفحات واختبار «أين في الصفحة؟» تتبعها.',
+    prints: {
+      1405: 'تبدأ صفحة ١٢١ بالمائدة ٧٧ (طبعة ١٤٠٥هـ)',
+      1421: 'تبدأ صفحة ١٢١ بالمائدة ٧٨ (طبعة ١٤٢١هـ وما بعدها)',
+    },
     translationChoice: 'الترجمة الإنجليزية',
     ayahMode: 'أكمل الآية',
     promptWords: 'عدد الكلمات الظاهرة من أول الآية',
@@ -735,7 +854,7 @@ const ar: Strings = {
     resetDone: 'حُذف التقدّم من هذا الجهاز.',
     about: 'عن التطبيق',
     aboutBody:
-      '«مراجعة» تطبيق مجاني مفتوح المصدر. نص القرآن هو النص العثماني المدقّق من مشروع تنزيل (رواية حفص) دون أي تغيير، وحدود الأرباع والأجزاء والصفحات مطابَقة مع علامات الأرباع في النص ومع quran.com. الترجمات الإنجليزية من تنزيل: صحيح إنترناشيونال (للاستخدام غير التجاري) وبيكثال (ملك عام). والترجمة بيان للمعنى وليست قرآنًا.',
+      '«مراجعة» تطبيق مجاني مفتوح المصدر. نص القرآن هو النص العثماني المدقّق من مشروع تنزيل (رواية حفص) دون أي تغيير، وحدود الأرباع والأجزاء والصفحات مطابَقة مع علامات الأرباع في النص ومع quran.com. الترجمات الإنجليزية من تنزيل: صحيح إنترناشيونال (للاستخدام غير التجاري) وبيكثال (ملك عام). والترجمة بيان للمعنى وليست قرآنًا. ومواضع الآيات في الصفحات، في طبعتي ١٤٠٥هـ و١٤٢١هـ من مصحف المدينة، من واجهة Quran.com البرمجية.',
     tanzil: 'مشروع تنزيل',
     source: 'الشيفرة المصدرية',
     version: (v) => `الإصدار ${v}`,
@@ -745,6 +864,14 @@ const ar: Strings = {
 
   account: {
     title: 'الحساب والمزامنة',
+    held: arPlural({
+      one: 'إجابة واحدة من أنواع التسميع الجديدة محفوظة على هذا الجهاز، وتحتاج قاعدة البيانات إلى آخر تحديث (الخطوة ٥ في دليل الإعداد) قبل مزامنتها.',
+      two: 'إجابتان من أنواع التسميع الجديدة محفوظتان على هذا الجهاز، وتحتاج قاعدة البيانات إلى آخر تحديث (الخطوة ٥ في دليل الإعداد) قبل مزامنتهما.',
+      few: '{n} إجابات من أنواع التسميع الجديدة محفوظة على هذا الجهاز، وتحتاج قاعدة البيانات إلى آخر تحديث (الخطوة ٥ في دليل الإعداد) قبل مزامنتها.',
+      many: '{n} إجابة من أنواع التسميع الجديدة محفوظة على هذا الجهاز، وتحتاج قاعدة البيانات إلى آخر تحديث (الخطوة ٥ في دليل الإعداد) قبل مزامنتها.',
+      other:
+        '{n} إجابة من أنواع التسميع الجديدة محفوظة على هذا الجهاز، وتحتاج قاعدة البيانات إلى آخر تحديث (الخطوة ٥ في دليل الإعداد) قبل مزامنتها.',
+    }),
     pitch: 'سجّل الدخول لتتزامن مراجعتك بين أجهزتك. بدون حساب يبقى تقدّمك على هذا الجهاز فقط.',
     email: 'البريد الإلكتروني',
     sendCode: 'أرسل لي رابط الدخول',

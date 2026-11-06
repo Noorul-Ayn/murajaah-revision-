@@ -29,6 +29,8 @@ This creates two tables, `reviews` and `user_settings`, and locks both with row-
 
    The free plan includes 1 GB of storage. Recordings are compressed: about 15 MB per hour of recitation.
 
+5. Open a new query and do the same with [`supabase/migrations/20261107000000_more_modes.sql`](../supabase/migrations/20261107000000_more_modes.sql). It lets the newer practice modes (where on the page, from the meaning, and similar ayahs) sync. Until it's run, their answers stay on the device they were given on, and Settings says so.
+
 ### 1.3 Tell Supabase where the app lives
 
 Sign-in emails contain a link that brings you back to the app, and Supabase only sends people back to addresses you allow.
@@ -121,6 +123,7 @@ On a phone, open that address and choose **Add to Home Screen** (Safari) or **In
 | "Email rate limit exceeded" | The built-in sender allows 2 emails an hour. Wait, or set up custom SMTP (1.7). |
 | syntax error at or near "supabase" in the SQL Editor | The file's name was pasted instead of its contents (1.2). |
 | Recordings stay "on this device" and never reach the account | The recitations SQL (1.2, step 4) hasn't been run on this project. |
+| Settings says answers from the newer practice modes are kept on this device | The SQL in 1.2, step 5 hasn't been run on this project. |
 | Sync failed: "relation public.reviews does not exist" | The SQL in 1.2 hasn't been run on this project. |
 | The deploy job fails at "Configure Pages" | Pages isn't enabled with **GitHub Actions** as the source (step 2.2). |
 | The app shows an old version | Reload once. The app also shows a "New version is ready" message with a Reload button. |

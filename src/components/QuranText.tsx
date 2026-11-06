@@ -23,6 +23,8 @@ interface AyahsProps {
   active?: number | null
   /** Makes each ayah tappable. */
   onAyahClick?: (index: number) => void
+  /** Words to colour, by ayah index and display-word position (where two similar ayahs differ). */
+  marked?: (index: number, word: number) => boolean
 }
 
 /** One or more ayahs, word by word, with ayah-end markers. */
@@ -34,6 +36,7 @@ export function Ayahs({
   className,
   active,
   onAyahClick,
+  marked,
 }: AyahsProps) {
   const { quran } = useApp()
   const split = indices.map((index) => splitWords(quran.text(index)))
@@ -60,9 +63,10 @@ export function Ayahs({
                 const fresh = animate && (k > 0 || i >= alreadyShown)
                 const step = offsets[k]! + i - (k === 0 ? alreadyShown : 0)
                 const style = fresh ? ({ '--i': step } as CSSProperties) : undefined
+                const cls = `word${fresh ? ' word--revealed' : ''}${marked?.(index, i) ? ' word--diff' : ''}`
                 return (
                   <Fragment key={i}>
-                    <span className={fresh ? 'word word--revealed' : 'word'} style={style}>
+                    <span className={cls} style={style}>
                       {w}
                     </span>{' '}
                   </Fragment>
