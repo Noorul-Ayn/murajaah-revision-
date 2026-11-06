@@ -24,6 +24,10 @@ export interface Settings {
   translation: TranslationId
   /** Whether the mushaf reader shows the translation under each ayah. */
   showTranslation: boolean
+  /** Reciting aloud: play a warning tone on a slip. */
+  listenSound: boolean
+  /** Reciting aloud: vibrate on a slip (phones). */
+  listenVibrate: boolean
   /** ms since epoch; the newer copy wins when syncing. */
   updatedAt: number
 }
@@ -45,6 +49,8 @@ export function defaultSettings(browserLang = 'en'): Settings {
     mode: 'ayah',
     translation: 'en-sahih',
     showTranslation: false,
+    listenSound: true,
+    listenVibrate: true,
     updatedAt: 0,
   }
 }
@@ -74,6 +80,8 @@ export function sanitizeSettings(value: unknown, base: Settings = defaultSetting
       base.translation,
     ),
     showTranslation: typeof v.showTranslation === 'boolean' ? v.showTranslation : base.showTranslation,
+    listenSound: typeof v.listenSound === 'boolean' ? v.listenSound : base.listenSound,
+    listenVibrate: typeof v.listenVibrate === 'boolean' ? v.listenVibrate : base.listenVibrate,
     updatedAt: clampInt(v.updatedAt, 0, Number.MAX_SAFE_INTEGER, base.updatedAt),
   }
 }

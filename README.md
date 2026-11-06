@@ -34,6 +34,7 @@ Murajaah quizzes you on what you've memorized, and has the full mushaf to read p
 - **Only what you've memorized.** Choose by juz, hizb, surah or any ayah range, and questions only come from there.
 - **Weakest first.** Every ayah and quarter has its own memory strength (the [FSRS](https://github.com/open-spaced-repetition/ts-fsrs) algorithm). Missed items come back later in the same session and sooner in future ones.
 - **Honest hints.** Reveal one more word, or the surah name. Using a word hint caps that answer at *hesitated*.
+- **Recite aloud.** Turn on the microphone and recite: words appear as you say them correctly. On a wrong or skipped word you hear a short warning tone (and the phone vibrates), the right word shows in red, and the app waits until you say it. At the end it suggests a grade. This uses the browser's own speech recognition (Chrome, Edge and Safari; it needs a connection). It hears words, not tajweed, and can mishear, so treat a warning as a prompt to check.
 - **Progress map.** All 240 quarters, juz by juz, coloured from weak to strong.
 - **The full mushaf.** Open any surah or juz and read the 604 Madani pages one by one, with surah headers and the basmala. Turn pages with the buttons, by swiping, or with the arrow keys, or jump straight to a page number. The app remembers where you stopped.
 - **English translation.** Turn it on in the reader to see each ayah followed by its meaning: Saheeh International or Pickthall, chosen in Settings.
@@ -46,6 +47,8 @@ Murajaah quizzes you on what you've memorized, and has the full mushaf to read p
 The text is the [Tanzil Project](https://tanzil.net)'s verified **Uthmani text, riwayat Hafs**, used unchanged and displayed in the Amiri Quran typeface.
 
 The reader follows the page divisions of the Madani mushaf (604 pages). The text flows within each page rather than reproducing the printed line breaks.
+
+Reciting aloud is matched against Tanzil's **plain-spelling text** (Simple Clean), because speech recognition writes modern spelling (الصلاة) rather than Uthmani (ٱلصَّلَوٰةَ). Each plain word is aligned to its Uthmani word for display; all 6,236 ayahs align cleanly (`tests/recitation.test.ts`).
 
 The English translations come from Tanzil: **Saheeh International** (distributed for non-commercial use) and **Pickthall** (1930, public domain). Each is loaded only when you turn the translation on, and is then kept for offline use. A translation conveys the meaning and is not the Qur'an itself.
 

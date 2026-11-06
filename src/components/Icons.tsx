@@ -50,6 +50,15 @@ export function SlidersIcon() {
   )
 }
 
+export function MicIcon() {
+  return (
+    <svg {...base} width="20" height="20">
+      <rect x="9" y="3" width="6" height="11" rx="3" />
+      <path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" />
+    </svg>
+  )
+}
+
 export function CloseIcon() {
   return (
     <svg {...base} width="22" height="22">

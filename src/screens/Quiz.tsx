@@ -11,7 +11,14 @@ import { QUARTER_COUNT } from '../lib/quran'
 import type { Grade3 } from '../lib/srs'
 import { Ayahs, PromptWords } from '../components/QuranText'
 import { Summary, type Result } from './Summary'
-import { CloseIcon } from '../components/Icons'
+import { CloseIcon, MicIcon } from '../components/Icons'
+import { RecitationBoard } from '../components/RecitationBoard'
+import { Dialog } from '../components/controls'
+import { speechSupported, useSpeech } from '../hooks/useSpeech'
+import { buildExpected, follow, suggestGrade, words as heardWords, type Expected } from '../lib/recitation'
+import { loadSimpleText } from '../lib/simple'
+import { primeAudio, warn } from '../lib/sound'
+import { getKv, setKv } from '../storage/db'
 import { useFocusMode } from '../app/focus'
 
 export type QuizRequest = { mode: Mode; scope: Scope; size: number; order: Order } | { mode: Mode; itemIds: ItemId[] }
@@ -59,7 +66,7 @@ function QuizSession({ request }: { request: QuizRequest }) {
 
   const [queue, setQueue] = useState<ItemId[]>(setup.queue)
   const [pos, setPos] = useState(0)
-  const [revealed, setRevealed] = useState(false)
+  const [revealedByUser, setRevealed] = useState(false)
   const [extraWords, setExtraWords] = useState(0)
   const [hintShown, setHintShown] = useState(false)
   const [choice, setChoice] = useState<number | 'unknown' | null>(null)
@@ -67,6 +74,12 @@ function QuizSession({ request }: { request: QuizRequest }) {
   const [requeued] = useState(() => new Set<ItemId>())
   const [busy, setBusy] = useState(false)
   const headingRef = useRef<HTMLHeadingElement>(null)
+
+  // Reciting aloud.
+  const speech = useSpeech()
+  const [recite, setRecite] = useState<{ expected: Expected[]; prompt: number } | null>(null)
+  const [noticeOpen, setNoticeOpen] = useState(false)
+  const warned = useRef(new Set<number>())
 
   const itemId = queue[pos]
   const question: Question | null = useMemo(
@@ -108,13 +121,16 @@ function QuizSession({ request }: { request: QuizRequest }) {
           return next
         })
       }
+      speech.stop()
+      setRecite(null)
+      warned.current.clear()
       setPos((p) => p + 1)
       setRevealed(false)
       setExtraWords(0)
       setHintShown(false)
       setChoice(null)
     },
-    [question, busy, recordAnswer, requeued, pos],
+    [question, busy, recordAnswer, requeued, pos, speech],
   )
 
   // Ayah mode: prompt words and the hint cap.
@@ -126,6 +142,65 @@ function QuizSession({ request }: { request: QuizRequest }) {
     return { shown, total }
   }, [question, quran, settings.promptWords, extraWords])
   const usedWordHint = extraWords > 0
+
+  const heard = useMemo(
+    () => heardWords(`${speech.finalText} ${speech.interimText}`),
+    [speech.finalText, speech.interimText],
+  )
+  const followed = useMemo(
+    () => (recite ? follow(recite.expected, heard, speech.interimText.length > 0) : null),
+    [recite, heard, speech.interimText],
+  )
+
+  // Warn once per slip, and reveal the answer when the recitation is complete.
+  const { listening, stop: stopListening } = speech
+  useEffect(() => {
+    if (!followed || !listening) return
+    let fresh = false
+    for (const p of followed.slips.keys()) {
+      if (!warned.current.has(p)) {
+        warned.current.add(p)
+        fresh = true
+      }
+    }
+    if (fresh) warn({ sound: settings.listenSound, vibrate: settings.listenVibrate })
+    if (followed.done) stopListening()
+  }, [followed, listening, stopListening, settings.listenSound, settings.listenVibrate])
+
+  // A recitation followed to the end reveals the answer by itself.
+  const revealed = revealedByUser || followed?.done === true
+
+  const canListen = question !== null && question.mode !== 'name' && speechSupported()
+
+  const startListening = async () => {
+    if (!question || question.mode === 'name') return
+    primeAudio()
+    if (!(await getKv<boolean>('speechNotice'))) {
+      setNoticeOpen(true)
+      return
+    }
+    warned.current.clear()
+    speech.start()
+    const simple = await loadSimpleText()
+    const prompt = question.mode === 'ayah' ? ayahPrompt!.shown : 0
+    setRecite({
+      expected: buildExpected(
+        question.reveal,
+        (i) => quran.text(i),
+        (i) => simple[i]!,
+        prompt,
+      ),
+      prompt,
+    })
+  }
+
+  const revealNow = () => {
+    speech.stop()
+    setRevealed(true)
+  }
+
+  let suggested: Grade3 | null = followed?.done ? suggestGrade(followed.slips.size) : null
+  if (suggested === 'perfect' && usedWordHint) suggested = 'hesitated'
 
   const chooseQuarter = async (c: number | 'unknown') => {
     if (question?.mode !== 'name' || choice !== null) return
@@ -169,7 +244,7 @@ function QuizSession({ request }: { request: QuizRequest }) {
       }
       if (!revealed && (e.key === ' ' || e.key === 'Enter')) {
         e.preventDefault()
-        setRevealed(true)
+        revealNow()
       } else if (!revealed && question.mode === 'ayah' && e.key.toLowerCase() === 'h') {
         setExtraWords((n) => n + 1)
       } else if (revealed && ['1', '2', '3'].includes(e.key)) {
@@ -210,7 +285,18 @@ function QuizSession({ request }: { request: QuizRequest }) {
       board = (
         <>
           {label && <p className="lawh__label">{label}</p>}
-          {revealed ? (
+          {recite && followed ? (
+            <>
+              <RecitationBoard
+                indices={question.reveal}
+                expected={recite.expected}
+                result={followed}
+                promptWords={recite.prompt}
+                complete={revealed}
+              />
+              {revealed && where(question.index)}
+            </>
+          ) : revealed ? (
             <>
               <Ayahs indices={question.reveal} alreadyShown={ayahPrompt!.shown} animate />
               {where(question.index)}
@@ -220,7 +306,7 @@ function QuizSession({ request }: { request: QuizRequest }) {
           )}
         </>
       )
-      if (!revealed) {
+      if (!revealed && !recite) {
         const hidden = ayahPrompt!.total - ayahPrompt!.shown
         hints = (
           <>
@@ -247,11 +333,25 @@ function QuizSession({ request }: { request: QuizRequest }) {
             {i18n.quarterLabel(question.quarter)}
           </p>
           {hintShown && !revealed && <p className="note">{i18n.surahName(quran.surahOf(first))}</p>}
-          {revealed && (
+          {recite && followed ? (
             <>
-              <Ayahs indices={question.reveal} animate basmala />
-              {where(first)}
+              <RecitationBoard
+                indices={question.reveal}
+                expected={recite.expected}
+                result={followed}
+                promptWords={0}
+                complete={revealed}
+                basmala
+              />
+              {revealed && where(first)}
             </>
+          ) : (
+            revealed && (
+              <>
+                <Ayahs indices={question.reveal} animate basmala />
+                {where(first)}
+              </>
+            )
           )}
         </>
       )
@@ -269,12 +369,26 @@ function QuizSession({ request }: { request: QuizRequest }) {
       board = (
         <>
           {hintShown && !revealed && <p className="lawh__label">{i18n.quarterLabel(question.quarter)}</p>}
-          <Ayahs indices={[question.previous]} className={revealed ? 'quran--context' : undefined} />
-          {revealed && (
+          <Ayahs indices={[question.previous]} className={revealed || recite ? 'quran--context' : undefined} />
+          {recite && followed ? (
             <>
-              <Ayahs indices={question.reveal} animate basmala />
-              {where(question.reveal[0]!)}
+              <RecitationBoard
+                indices={question.reveal}
+                expected={recite.expected}
+                result={followed}
+                promptWords={0}
+                complete={revealed}
+                basmala
+              />
+              {revealed && where(question.reveal[0]!)}
             </>
+          ) : (
+            revealed && (
+              <>
+                <Ayahs indices={question.reveal} animate basmala />
+                {where(question.reveal[0]!)}
+              </>
+            )
           )}
         </>
       )
@@ -316,7 +430,11 @@ function QuizSession({ request }: { request: QuizRequest }) {
           className="btn btn--quiet"
           aria-label={t.quiz.end}
           title={t.quiz.end}
-          onClick={() => (results.length ? setQueue((q) => q.slice(0, pos)) : navigate('/'))}
+          onClick={() => {
+            speech.stop()
+            if (results.length) setQueue((q) => q.slice(0, pos))
+            else navigate('/')
+          }}
         >
           <CloseIcon />
         </button>
@@ -387,36 +505,103 @@ function QuizSession({ request }: { request: QuizRequest }) {
           )
         ) : revealed ? (
           <>
+            {followed?.done && (
+              <p className="note" role="status">
+                {followed.slips.size === 0
+                  ? t.listen.done
+                  : t.listen.doneWithSlips(t.listen.mistakes(followed.slips.size, num(followed.slips.size)))}
+              </p>
+            )}
             {usedWordHint && <p className="note">{t.quiz.hintCap}</p>}
             <div className="grades" role="group" aria-label={t.quiz.howDid}>
               {(['missed', 'hesitated', 'perfect'] as const).map((g, k) => (
                 <button
                   key={g}
                   type="button"
-                  className={`grade grade--${g}`}
+                  className={`grade grade--${g}${suggested === g ? ' grade--suggested' : ''}`}
                   disabled={busy || (g === 'perfect' && usedWordHint)}
                   onClick={() => void grade(g)}
                   aria-keyshortcuts={String(k + 1)}
+                  aria-description={suggested === g ? t.listen.suggested : undefined}
                 >
                   {t.quiz.grades[g]}
+                  {suggested === g && <span className="grade__tag">{t.listen.suggested}</span>}
                 </button>
               ))}
             </div>
           </>
         ) : (
           <>
-            <button
-              type="button"
-              className="btn btn--primary btn--large btn--block"
-              onClick={() => setRevealed(true)}
-              aria-keyshortcuts="Space"
-            >
-              {t.quiz.reveal}
-            </button>
-            <p className="note keys-hint">{t.quiz.keys}</p>
+            {(speech.listening || speech.error) && (
+              <p className="listen-status" role={speech.error ? 'alert' : 'status'}>
+                {speech.listening && (
+                  <span className={`dot ${followed?.stuck ? 'dot--bad' : 'dot--live'}`} aria-hidden="true" />
+                )}
+                {speech.error === 'denied'
+                  ? t.listen.denied
+                  : speech.error === 'network'
+                    ? t.listen.network
+                    : speech.error === 'no-speech'
+                      ? t.listen.noSpeech
+                      : speech.error
+                        ? t.listen.failed
+                        : followed?.stuck
+                          ? t.listen.slipped
+                          : t.listen.listening}
+              </p>
+            )}
+            <div className={canListen ? 'listen-row' : undefined}>
+              {canListen &&
+                (speech.listening ? (
+                  <button type="button" className="btn btn--large" onClick={() => speech.stop()}>
+                    <span className="dot dot--live" aria-hidden="true" />
+                    {t.listen.stop}
+                  </button>
+                ) : (
+                  <button type="button" className="btn btn--large" onClick={() => void startListening()}>
+                    <MicIcon />
+                    {t.listen.start}
+                  </button>
+                ))}
+              <button
+                type="button"
+                className="btn btn--primary btn--large btn--block"
+                onClick={revealNow}
+                aria-keyshortcuts="Space"
+              >
+                {t.quiz.reveal}
+              </button>
+            </div>
+            {!speech.listening && <p className="note keys-hint">{t.quiz.keys}</p>}
           </>
         )}
       </div>
+      <Dialog
+        open={noticeOpen}
+        onClose={() => setNoticeOpen(false)}
+        title={t.listen.noticeTitle}
+        actions={
+          <>
+            <button type="button" className="btn" onClick={() => setNoticeOpen(false)}>
+              {t.settings.cancel}
+            </button>
+            <button
+              type="button"
+              className="btn btn--primary"
+              onClick={async () => {
+                setNoticeOpen(false)
+                await setKv('speechNotice', true)
+                void startListening()
+              }}
+            >
+              {t.listen.noticeOk}
+            </button>
+          </>
+        }
+      >
+        <p>{t.listen.noticeBody}</p>
+        <p className="muted">{t.listen.noticeLimits}</p>
+      </Dialog>
     </div>
   )
 }

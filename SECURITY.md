@@ -8,3 +8,4 @@ If you find a security problem, for example a way to read or change another acco
 - Synced data lives in two Supabase tables protected by row-level security. Every policy checks `auth.uid() = user_id`; see `supabase/migrations/` and `tests/migration.test.ts`.
 - The app only ever holds the Supabase **publishable** key. The secret (`service_role`) key must never be added to the repository, its variables or the app.
 - Users can delete their synced data, or their whole account, from Settings.
+- Reciting aloud uses the browser's speech recognition. In Chrome and Edge the audio goes to the browser maker's speech service; the app tells users this before the microphone is first used. Murajaah itself never records, uploads or stores audio.

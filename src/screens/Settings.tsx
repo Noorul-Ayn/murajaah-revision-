@@ -73,6 +73,28 @@ export function Settings() {
         </div>
       </section>
 
+      <section className="section" aria-labelledby="listening-h">
+        <h2 id="listening-h">{t.settings.listening}</h2>
+        <label className="toggle">
+          <input
+            type="checkbox"
+            role="switch"
+            checked={settings.listenSound}
+            onChange={(e) => updateSettings({ listenSound: e.target.checked })}
+          />
+          <span>{t.settings.listenSound}</span>
+        </label>
+        <label className="toggle">
+          <input
+            type="checkbox"
+            role="switch"
+            checked={settings.listenVibrate}
+            onChange={(e) => updateSettings({ listenVibrate: e.target.checked })}
+          />
+          <span>{t.settings.listenVibrate}</span>
+        </label>
+      </section>
+
       <section className="section" aria-labelledby="reading-h">
         <h2 id="reading-h">{t.settings.reading}</h2>
         <Segmented

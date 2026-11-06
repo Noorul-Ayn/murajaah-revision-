@@ -103,6 +103,30 @@ const en = {
     keys: 'Space shows the answer. 1, 2 and 3 grade it.',
   },
 
+  listen: {
+    start: 'Recite aloud',
+    stop: 'Stop listening',
+    loading: 'Getting ready…',
+    listening: 'Listening. Recite from where the text stops.',
+    slipped: 'Not that word. The right one is shown in red; say it to carry on.',
+    skipped: 'A word was skipped.',
+    done: 'No slips. Check the grade, then confirm it.',
+    doneWithSlips: (slips: string) => `${slips}. Check the grade, then confirm it.`,
+    suggested: 'Suggested',
+    mistakes: (n: number, f: string) => (n === 1 ? '1 slip' : `${f} slips`),
+    unsupported: 'This browser can’t listen to recitation. Use Chrome, Edge or Safari.',
+    denied: 'The microphone is blocked. Allow it for this site in the browser’s settings, then try again.',
+    network: 'Listening needs an internet connection.',
+    noSpeech: 'Nothing was heard. Check the microphone and try again.',
+    failed: 'Listening stopped unexpectedly. Try again.',
+    noticeTitle: 'Before you recite aloud',
+    noticeBody:
+      'Your browser turns your voice into words with its own speech service (Google’s, in Chrome), which needs an internet connection. Murajaah doesn’t record or keep the audio.',
+    noticeLimits:
+      'It hears words, not tajweed, and it was made for everyday Arabic rather than recitation, so it can mishear. Treat a warning as a prompt to check, not a verdict.',
+    noticeOk: 'Start listening',
+  },
+
   where: {
     surahAyah: (surah: string, ayah: string) => `${surah} ${ayah}`,
     page: (n: string) => `Page ${n}`,
@@ -179,6 +203,9 @@ const en = {
     themes: { system: 'Match device', light: 'Light', dark: 'Dark' } satisfies Record<Theme, string>,
     textSize: 'Qur’an text size',
     textSizes: { m: 'Medium', l: 'Large', xl: 'Extra large' } satisfies Record<TextSize, string>,
+    listening: 'Reciting aloud',
+    listenSound: 'Warning sound on a slip',
+    listenVibrate: 'Vibrate on a slip',
     reading: 'Reading the mushaf',
     translationChoice: 'English translation',
     ayahMode: 'Continue the ayah',
@@ -364,6 +391,30 @@ const ar: Strings = {
     keys: 'المسافة تُظهر الجواب، و١ و٢ و٣ للتقييم.',
   },
 
+  listen: {
+    start: 'سمّع بصوتك',
+    stop: 'أوقف الاستماع',
+    loading: 'جارٍ التجهيز…',
+    listening: 'جارٍ الاستماع. اقرأ من حيث يتوقف النص.',
+    slipped: 'ليست هذه الكلمة. الصواب ظاهر باللون الأحمر، فاقرأه لتكمل.',
+    skipped: 'فاتتك كلمة.',
+    done: 'بلا أخطاء. راجع التقييم ثم أكّده.',
+    doneWithSlips: (slips) => `${slips}. راجع التقييم ثم أكّده.`,
+    suggested: 'مقترح',
+    mistakes: (n, f) => (n === 1 ? 'خطأ واحد' : n === 2 ? 'خطآن' : n <= 10 ? `${f} أخطاء` : `${f} خطأً`),
+    unsupported: 'هذا المتصفح لا يستطيع الاستماع إلى التلاوة. استخدم كروم أو إيدج أو سفاري.',
+    denied: 'الميكروفون محظور. اسمح به لهذا الموقع من إعدادات المتصفح ثم حاول مرة أخرى.',
+    network: 'الاستماع يحتاج إلى اتصال بالإنترنت.',
+    noSpeech: 'لم يُسمع شيء. تحقّق من الميكروفون ثم حاول مرة أخرى.',
+    failed: 'توقف الاستماع فجأة. حاول مرة أخرى.',
+    noticeTitle: 'قبل أن تسمّع بصوتك',
+    noticeBody:
+      'يحوّل المتصفح صوتك إلى كلمات عبر خدمة التعرّف على الكلام الخاصة به (خدمة Google في كروم)، وهي تحتاج إلى اتصال بالإنترنت. لا يسجّل تطبيق «مراجعة» الصوت ولا يحتفظ به.',
+    noticeLimits:
+      'هذه الخدمة تسمع الكلمات لا أحكام التجويد، وصُمّمت للعربية المعتادة لا للتلاوة، فقد تخطئ السماع. اعتبر التنبيه دعوة للتحقّق لا حكمًا نهائيًا.',
+    noticeOk: 'ابدأ الاستماع',
+  },
+
   where: {
     surahAyah: (surah, ayah) => `${surah} ${ayah}`,
     page: (n) => `صفحة ${n}`,
@@ -439,6 +490,9 @@ const ar: Strings = {
     themes: { system: 'حسب الجهاز', light: 'فاتح', dark: 'داكن' },
     textSize: 'حجم خط المصحف',
     textSizes: { m: 'متوسط', l: 'كبير', xl: 'كبير جدًا' },
+    listening: 'التسميع بالصوت',
+    listenSound: 'صوت تنبيه عند الخطأ',
+    listenVibrate: 'اهتزاز عند الخطأ',
     reading: 'قراءة المصحف',
     translationChoice: 'الترجمة الإنجليزية',
     ayahMode: 'أكمل الآية',

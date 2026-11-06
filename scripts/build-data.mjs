@@ -128,7 +128,24 @@ const data = {
 
 if (ayahs.length !== 6236) throw new Error(`expected 6236 ayahs, got ${ayahs.length}`)
 
+// Plain-spelling text (Tanzil "Simple Clean"), one entry per ayah, for
+// matching what speech recognition hears. Copied unchanged.
+const simpleXml = await read('quran-simple-clean.xml')
+const simple = parser.parse(simpleXml).quran.sura.flatMap((s) => s.aya.map((a) => a.text))
+if (simple.length !== ayahs.length) throw new Error(`simple text has ${simple.length} ayahs`)
+const simpleCopyright = simpleXml
+  .match(/<!--([\s\S]*?)-->/)[1]
+  .split('\n')
+  .map((l) => l.replace(/^#\s?/, '').trimEnd())
+  .filter((l) => l.trim() && !/^=+$/.test(l.trim()))
+  .join('\n')
+  .trim()
+
 await mkdir(path.join(root, 'src', 'data'), { recursive: true })
+await writeFile(
+  path.join(root, 'src', 'data', 'quran-simple.json'),
+  JSON.stringify({ copyright: simpleCopyright, ayahs: simple }) + '\n',
+)
 const out = path.join(root, 'src', 'data', 'quran-hafs.json')
 await writeFile(out, JSON.stringify(data) + '\n')
 console.log(

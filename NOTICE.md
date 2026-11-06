@@ -19,6 +19,10 @@ keeps Tanzil's copyright block in `src/data/quran-hafs.json`, and credits and
 links Tanzil in the app under Settings → About. Before changing anything in
 `data/tanzil/` or the build script, re-read these terms.
 
+`data/tanzil/quran-simple-clean.xml` and `src/data/quran-simple.json` contain
+the Tanzil Quran Text (Simple Clean, Version 1.1) under the same terms. It is
+used only to match recitation heard through the microphone and is never shown.
+
 The quarter, juz and page boundaries come from Tanzil's metadata (CC BY), with
 one correction documented in the README and recorded in the data file.
 

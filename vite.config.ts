@@ -41,11 +41,12 @@ export default defineConfig({
         // The Qur'an text is one ~1.4 MB chunk; precache it so quizzes work offline.
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-        // Translations are large and optional: cache each one the first time it's opened.
-        globIgnores: ['**/en-sahih-*.js', '**/en-pickthall-*.js'],
+        // Translations and the plain-spelling text (for reciting aloud) are large and
+        // optional: cache each one the first time it's used.
+        globIgnores: ['**/en-sahih-*.js', '**/en-pickthall-*.js', '**/quran-simple-*.js'],
         runtimeCaching: [
           {
-            urlPattern: /\/assets\/en-(sahih|pickthall)-[\w-]+\.js$/,
+            urlPattern: /\/assets\/(en-sahih|en-pickthall|quran-simple)-[\w-]+\.js$/,
             handler: 'CacheFirst',
             options: { cacheName: 'translations', expiration: { maxEntries: 8 } },
           },

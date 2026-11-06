@@ -17,6 +17,8 @@ const files = {
   // English translations (Tanzil terms: non-commercial use; see NOTICE.md).
   'trans/en.sahih.txt': 'https://tanzil.net/trans/?transID=en.sahih&type=txt-2',
   'trans/en.pickthall.txt': 'https://tanzil.net/trans/?transID=en.pickthall&type=txt-2',
+  // Plain modern spelling, no diacritics: used to match what speech recognition hears.
+  'quran-simple-clean.xml': 'https://tanzil.net/pub/download/index.php?quranType=simple-clean&outType=xml&agree=true',
   'quran-uthmani.xml':
     'https://tanzil.net/pub/download/index.php?marks=true&sajdah=true&rub=true&tatweel=true&quranType=uthmani&outType=xml&agree=true',
   'quran-data.xml': 'https://tanzil.net/res/text/metadata/quran-data.xml',
